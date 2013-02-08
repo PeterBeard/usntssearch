@@ -2,7 +2,8 @@ usntssearch
 ===========
 Metasearch on state-of-the-art crawlers
 
-==[ To Install ]==
+Installation
+------------
 1. Install python and setuptools
 2. Run "python setup.py install" to install the software
 3. Run "python mega2.py" to start NZBmegasearch
