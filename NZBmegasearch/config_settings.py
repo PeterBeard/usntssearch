@@ -22,9 +22,7 @@ import os
 import SearchModule
 MAX_PROVIDER_NUMBER = 10
 
-
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
+# Write to the configuration file
 def	write_conf(requestForm):
 	parser = SafeConfigParser()
 	parser.read('settings.ini')
@@ -41,9 +39,7 @@ def	write_conf(requestForm):
 	with open('settings.ini', 'wt') as configfile:
 		parser.write(configfile)
    
-
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-     
+# Read from the configuration file
 def read_conf(): 
 	cfg_struct = {}
 	parser = SafeConfigParser()		
@@ -57,38 +53,7 @@ def read_conf():
 
 	return cfg_struct
 
-
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
-			
-def html_head(): 
-	buf = '<!DOCTYPE html>\n'
-	buf = buf+'<html>\n'
-	buf = buf+'<head>\n'
-	buf = buf+'<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n'
-	buf = buf+'<title>NZB MegasearcH</title>\n'
-	buf = buf+'<style type="text/css">\n'
-	buf = buf+'<!--\n'
-	buf = buf+'@import url("static/style.css");\n'
-	buf = buf+'-->\n'
-	buf = buf+'</style>\n'
-	buf = buf+'</head>\n'
-	buf = buf+'<body>\n'
-	buf = buf+'<div id="container">\n'
-	buf = buf+'<h1>Configuration</h1>\n'
-	buf = buf+'<form action="/" method="post">\n'
-	
-	return buf	
-
-def html_foot():
-	buf = '<input type="submit" value="Save" /><input type="button" value="Back" onclick="location.href=\'\/\';">\n'
-	buf = buf+ '</form></div></body></html>\n'	
-	
-	return buf
-	
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
-    
+# Build HTML for the configuration page
 def html_output(configOptions, optionNames=None):
 	if optionNames == None:
 		optionNames = {'host':'Host','port':'Port (1024-65535)'}
@@ -101,19 +66,19 @@ def html_output(configOptions, optionNames=None):
 		if modName in configOptions['enabledModules']:
 			moduleEnabledStr = ' checked="checked"'
 		modulesHTML = modulesHTML + '<h3><input type="checkbox"' + moduleEnabledStr + '" name="modules" id="' + modName + '" value="' + modName + '" /><label for="' + modName + '">' + modName + '</label></h3>'
-		#modulesHTML = modulesHTML + module.configHTML()
+		moduleConfigHTML = module.configurationHTML()
+		if len(moduleConfigHTML) > 0:
+			modulesHTML = modulesHTML + '<fieldset id="' + modName + '-options" class="module-options">' + moduleConfigHTML + '</fieldset>'
+	
 	return render_template('config.html',configOptions=configOptions,optionNames=optionNames,modulesHTML=modulesHTML)
 
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
-
+# Read the config file and return the HTML page
 def config_read():
 	cf = read_conf()
 	webbuf_body = html_output(cf)
 	return webbuf_body
 
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
+# Write HTTP POST data to the config file
 def config_write(request_form):
 	cf = write_conf(request_form)
 
@@ -122,10 +87,7 @@ if __name__ == "__main__":
 	cf = read_conf()
 	print cf
 
-	webbuf_head = html_head()
-	webbuf_body = html_output(cf)
-	webbuf_foot = html_foot()	
-	webbuf_ret = webbuf_head+webbuf_body+webbuf_foot	
+	webbuf_ret = html_output(cf)
 	
 	myFile = open('results.html', 'w')
 	myFile.write(webbuf_ret)
