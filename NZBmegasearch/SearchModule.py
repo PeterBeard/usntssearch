@@ -83,6 +83,7 @@ def performSearch(queryString, enabledModules = None, configOptions = None):
 	for t in threadHandles:
 		t.join()
 	print '=== All Search Threads Finished ==='
+
 	return globalResults
 	
 def performSearchThread(queryString, module, lock):
