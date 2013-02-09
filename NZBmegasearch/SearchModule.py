@@ -38,12 +38,13 @@ def loadSearchModules(moduleDir = None):
 		print 'Found ' + str(len(searchModuleNames)) + ' modules'
 	# Import the modules that the user has enabled
 	print 'Importing: ' + ', '.join(searchModuleNames)
-	try:
-		for module in searchModuleNames:
+	
+	for module in searchModuleNames:
+		try:
 			importedModules = __import__('SearchModules.' + module)
-	except Exception as e:
-		print 'Failed to import search modules: ' + str(e)
-		return
+		except Exception as e:
+			searchModuleNames.remove(module)
+			print 'Failed to import search module "' + module + '": ' + str(e)
 	
 	print 'instantiating module classes'
 	# Instantiate the modules
