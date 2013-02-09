@@ -15,10 +15,7 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #    
 
-import decimal
-import datetime
 import time
-import dateutil.relativedelta
 from operator import itemgetter
 from urllib2 import urlparse
 from flask import render_template
@@ -82,7 +79,7 @@ def summary_results(rawResults,strsearch):
 		results[z]  ['ignore'] = 0			
 		#~ then update
 		if(findone==0):
-			results[z]  ['ignore'] = 1		
+			results[z]['ignore'] = 1		
 
 	return results
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
@@ -98,12 +95,11 @@ def cleanUpResults(results):
 			if (szf > 1000.0): 
 				szf = szf /1000
 				mgsz = ' GB '
-			# Calculate the age of the post
-			dt1 =  datetime.datetime.fromtimestamp(results[i]['posting_date_timestamp'])
-			dt2 =  datetime.datetime.today()
-			rd = dateutil.relativedelta.relativedelta(dt2, dt1)
-			#~ approximated date, whatev
-			totdays = rd.years * 365  + rd.months * 31  + rd.days
+			# Calculate age in seconds
+			currentTime = time.time()
+			age = currentTime - results[i]['posting_date_timestamp']
+			# Days
+			age = int(round(age / (3600*24)))
 			#~ homemade lazy stuff
 			hname = urlparse.urlparse(results[i]['provider']).hostname			
 			hname = hname.replace("www.", "")
@@ -112,7 +108,7 @@ def cleanUpResults(results):
 				'url':results[i]['url'],
 				'title':results[i]['title'],
 				'filesize':str(round(szf,1)) + mgsz,
-				'age':totdays,
+				'age':age,
 				'providerurl':results[i]['provider'],
 				'providertitle':hname
 			})
