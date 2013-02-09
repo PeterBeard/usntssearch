@@ -15,6 +15,8 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import ConfigParser
+import json
+import xml.etree.cElementTree as ET
 from SearchModule import *
 
 # Search on Newznab
@@ -90,4 +92,8 @@ class Newznab(SearchModule):
 				'provider':self.baseURL
 			}
 			parsed_data.append(d1)
-		return parsed_data		
+		return parsed_data
+	# Show config options
+	def configurationHTML(self):
+		htmlBuffer = '-- Newznab Options --'
+		return htmlBuffer

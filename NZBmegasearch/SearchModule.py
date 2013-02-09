@@ -14,14 +14,11 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
-import requests
-import json
-import datetime
-import time
 import config_settings
-import xml.etree.cElementTree as ET
 import os
+import requests
 import threading
+import time
 
 def loadSearchModules(moduleDir = None):
 	global loadedModules
@@ -113,6 +110,7 @@ class SearchModule(object):
 		self.baseURL = ''
 		self.nzbDownloadBaseURL = ''
 		self.apiKey = ''
+		self.userAgent = ''
 	# Show the configuration options for this module
 	def configurationHTML(self):
 		return ''
