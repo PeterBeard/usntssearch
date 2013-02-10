@@ -37,14 +37,16 @@ class SearchResults(object):
 			raise TypeError('Only Result objects can be appended to a SearchResults object')
 	# Sort the results by relevance, i.e. string similarity
 	def sortByRelevance(self, queryString=''):
-		print 'sorting by relevance'
+		queryString = queryString.lower()
+		dottedQueryString = queryString.replace(' ','.')
 		# difflib can be used to calculate the similarities of two strings
 		# difflib.SequenceMatcher(isjunk=None, a='', b='', autojunk=True)
 		for r in self.results:
 			try:
-				r.score = difflib.SequenceMatcher(None, queryString.lower(), r.title.lower()).ratio()
+				r.score = difflib.SequenceMatcher(None, r.title.lower(), queryString).ratio()
+				r.score = r.score + difflib.SequenceMatcher(None, r.title.lower(), dottedQueryString).ratio()
 			except Exception as e:
-				r.score = 1
+				r.score = 2
 				print 'Error calculating score: ' + str(e)
 
 		# Now, sort the results by score
