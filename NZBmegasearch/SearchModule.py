@@ -20,6 +20,8 @@ import requests
 import threading
 import time
 
+from SearchResults import *
+
 def loadSearchModules(moduleDir = None):
 	global loadedModules
 	# Find search modules
@@ -64,9 +66,11 @@ def loadSearchModules(moduleDir = None):
 def performSearch(queryString, enabledModules = None, configOptions = None):
 	# Perform the search using every module
 	global globalResults
+	# Load the modules if it hasn't already been done
 	if 'loadedModules' not in globals():
 		loadSearchModules()
-	globalResults = []
+	# Iterate over all of the modules and start a thread for each one to perform its search
+	globalResults = SearchResults()
 	threadHandles = []
 	lock = threading.Lock()
 	for module in loadedModules:
@@ -77,13 +81,14 @@ def performSearch(queryString, enabledModules = None, configOptions = None):
 				threadHandles.append(t)
 		except Exception as e:
 			print 'Error starting thread for search module ' + module + ': ' + str(e)
-
+	# Wait for all the threads to finish
 	for t in threadHandles:
 		t.join()
 	print '=== All Search Threads Finished ==='
 
 	return globalResults
-	
+
+# The thread that performs searches and integrates the results from the various modules
 def performSearchThread(queryString, module, lock):
 	print 'starting search thread'
 	localResults = module.search(queryString)
@@ -92,7 +97,7 @@ def performSearchThread(queryString, module, lock):
 	try:
 		lock.release()
 	except Exception as e:
-		print e
+		print 'Could not release search result lock: ' + str(e)
 
 # Exception to be raised when a search function is not implemented
 class NotImplementedException(Exception):

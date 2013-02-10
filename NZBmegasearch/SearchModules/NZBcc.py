@@ -16,6 +16,11 @@
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 from SearchModule import *
 
+try:
+	from BeautifulSoup import BeautifulSoup
+except Exception:
+	from bs4 import BeautifulSoup # BeautifulSoup 4
+
 # Search on NZB.cc
 class NZBcc(SearchModule):
 	# Set up class variables
@@ -43,7 +48,7 @@ class NZBcc(SearchModule):
 		cstart = data.find("[", cstart, cend)+1
 
 		#~ parse all members and put in parsed data
-		parsed_data = []
+		results = SearchResults()
 		inc=1
 		
 		while True:
@@ -84,10 +89,10 @@ class NZBcc(SearchModule):
 
 			#~ absolute day of posting
 			intage = int(age[0:age.find(' ')])
-			today = datetime.datetime.now()
-			dd = datetime.timedelta(days=intage)
-			earlier = today - dd
-			posting_date_timestamp = time.mktime(earlier.timetuple())
+			today = time.time()
+			#dd = datetime.timedelta(days=intage)
+			#earlier = today - dd
+			posting_date_timestamp = today - intage*3600*24#time.mktime(earlier.timetuple())
 			#~ print posting_date_timestamp 
 
 			#~ convert for total nzb url
@@ -95,21 +100,22 @@ class NZBcc(SearchModule):
 			url = self.nzbDownloadBaseURL + id_nzb
 			
 			cstart = s8b+1
-			d1 = {  'title': name,
-					'poster': poster_name,
-					'size': filesize,
-					'url': url,
-					'filelist_preview': filelist_preview,
-					'group': group,
-					'posting_date_timestamp': posting_date_timestamp,
-					'release_comments': release_comments,
-					'ignore':0,
-					'provider':self.baseURL
-					}
+			# Clean up the name
+			nstart = name.find('&quot;')+6
+			name = name[nstart:name.find('&quot;',nstart)]
+			name = name.replace('<b>','')
+			name = name.replace('<\/b>','')
+			# Create the result object
+			r = Result()
+			r.title = name
+			r.poster = poster_name
+			r.size = filesize
+			r.nzbURL = url
+			r.group = group
+			r.timestamp = posting_date_timestamp
+			r.provider = self.name
+			r.providerURL = self.baseURL
 			
-			parsed_data.append(d1)
-			#~ print d1["url"]
-			#~ inc = inc +1 
-			#~ print "=======" +str(inc)
+			results.append(r)
 
-		return parsed_data
+		return results

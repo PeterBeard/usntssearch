@@ -14,6 +14,8 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
+import json
+
 from SearchModule import *
 
 # Search on NZBx.co
@@ -38,20 +40,18 @@ class NZBx(SearchModule):
 		
 		data = http_result.json()
 			
-		parsed_data = []
+		results = SearchResults()
 		for i in xrange(len(data)):
-			d1 = {
-				'title': data[i]['name'],
-				'poster': data[i]['fromname'],
-				'size': data[i]['size'],
-				'url': data[i]['nzb'],
-				'filelist_preview': '',
-				'group': data[i]['groupid'],
-				'posting_date_timestamp': int(data[i]['postdate']),
-				'release_comments': '',
-				'ignore':0,
-				'provider':self.baseURL
-			}
+			if data[i]['name']:
+				r = Result()
+				r.title = data[i]['name']
+				r.poster = data[i]['fromname']
+				r.size = data[i]['size']
+				r.nzbURL = data[i]['nzb']
+				r.group = data[i]['groupid']
+				r.timestamp = int(data[i]['postdate'])
+				r.provider = self.name
+				r.providerURL = self.baseURL
 
-			parsed_data.append(d1)
-		return parsed_data
+			results.append(r)
+		return results

@@ -27,18 +27,25 @@ except Exception:
 
 import SearchModule
 
-def dosearch(strsearch, cfg=None):
+def dosearch(strsearch, cfg=None, sortkey='relevance', sortdir='asc'):
 	if cfg == None:
 		cfg = {'enabledModules':['nzbX.co','NZB.cc']}
 	strsearch = strsearch.strip()
 		
 	if(len(strsearch)):
 		results = SearchModule.performSearch(strsearch, cfg['enabledModules'])
-		results = summary_results(results,strsearch)
+		#results = summary_results(results,strsearch)
 	else:
 		return render_template('main_page.html')
-	
-	return cleanUpResults(results)
+	# Sort the results
+	if sortkey == 'age': # By age
+		results.sortByAge(sortdir)
+	elif sortkey == 'size': # By size
+		results.sortBySize(sortdir)
+	else:
+		results.sortByRelevance(strsearch)
+	# Render the page
+	return render_template('main_page.html',results=results,sortkey=sortkey,sortdir=sortdir,queryString=strsearch)
 
 def sanitize_html(value):
 	VALID_TAGS = []
@@ -82,38 +89,6 @@ def summary_results(rawResults,strsearch):
 			results[z]['ignore'] = 1		
 
 	return results
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
-# Generate HTML for the results
-def cleanUpResults(results):
-	niceResults = []
-	for i in xrange(len(results)):
-		if(results[i]['ignore'] == 0):
-			# Convert sized to smallest SI unit (note that these are powers of 10, not powers of 2, i.e. OS X file sizes rather than Windows/Linux file sizes)
-			szf = float(results[i]['size']/1000000.0)
-			mgsz = ' MB '
-			if (szf > 1000.0): 
-				szf = szf /1000
-				mgsz = ' GB '
-			# Calculate age in seconds
-			currentTime = time.time()
-			age = currentTime - results[i]['posting_date_timestamp']
-			# Days
-			age = int(round(age / (3600*24)))
-			#~ homemade lazy stuff
-			hname = urlparse.urlparse(results[i]['provider']).hostname			
-			hname = hname.replace("www.", "")
-			
-			niceResults.append({
-				'url':results[i]['url'],
-				'title':results[i]['title'],
-				'filesize':str(round(szf,1)) + mgsz,
-				'age':age,
-				'providerurl':results[i]['provider'],
-				'providertitle':hname
-			})
-	
-	return render_template('main_page.html',results=niceResults)
 
 #~ debug
 if __name__ == "__main__":

@@ -52,16 +52,16 @@ class Newznab(SearchModule):
 		data = http_result.text
 
 		# Try to parse the data
-		parsed_data = []
+		results = SearchResults()
 		#~ parse errors
 		try:
 			tree = ET.fromstring(data)
 		except BaseException:
 			print "ERROR: Wrong API?"
-			return parsed_data
+			return results
 		except Exception as e:
 			print e
-			return parsed_data
+			return results
 
 		#~ successful parsing
 		for elem in tree.iter('item'):
@@ -78,21 +78,17 @@ class Newznab(SearchModule):
 				if('name' in attr.attrib):
 					if (attr.attrib['name'] == 'poster'): 
 						elem_poster = attr.attrib['value']
+			r = Result()
+			r.title = elem_title.text
+			r.poster = elem_poster
+			r.size = int(elem_url.attrib['length'])
+			r.timestamp = float(elem_postdate)
+			r.nzbURL = elem_url.attrib['url']
+			r.provider = self.name
+			r.providerURL = self.baseURL
 
-			d1 = { 
-				'title': elem_title.text,
-				'poster': elem_poster,
-				'size': int(elem_url.attrib['length']),
-				'url': elem_url.attrib['url'],
-				'filelist_preview': '',
-				'group': '',
-				'posting_date_timestamp': float(elem_postdate),
-				'release_comments': '',
-				'ignore':0,
-				'provider':self.baseURL
-			}
-			parsed_data.append(d1)
-		return parsed_data
+			results.append(r)
+		return results
 	# Show config options
 	def configurationHTML(self):
 		htmlBuffer = '-- Newznab Options --'

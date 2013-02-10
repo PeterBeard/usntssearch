@@ -51,8 +51,8 @@ class Womble(SearchModule):
 			rows = soup.find_all('tr')
 		else:
 			rows = soup.findAll('tr')
-		# Ignore the first two rows
-		results = []
+		
+		results = SearchResults()
 		
 		for row in rows:
 			if bs_version == 4:
@@ -108,20 +108,15 @@ class Womble(SearchModule):
 							title = title + unicode(part.string)
 						else:
 							title = title + unicode(part)
+					r = Result()
+					r.title = title
+					r.poster = poster
+					r.size = filesize
+					r.nzbURL = self.baseURL + '/' + url
+					r.timestamp = timestamp
+					r.provider = self.name
+					r.providerURL = self.baseURL
 					
-					group = 'alt.a.b'
-					
-					rowData = {
-						'title':title,
-						'poster':poster,
-						'size':filesize,
-						'url':self.baseURL + '/' + url,
-						'group':group,
-						'posting_date_timestamp':timestamp,
-						'ignore':0,
-						'provider':self.baseURL
-					}
-					
-					results.append(rowData)
+					results.append(r)
 		
 		return results
