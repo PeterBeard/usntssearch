@@ -1,3 +1,13 @@
+{% set sizedir = 'asc' %}
+{% set agedir = 'asc' %}
+{% if queryString is not defined%}
+{%     set queryString = 'Enter your keyword' %}
+{% endif %}
+{% if sortkey == 'size' and sortdir == 'asc' %}
+{%     set sizedir = 'desc' %}
+{% elif sortkey == 'age' and sortdir == 'asc' %}
+{%     set agedir = 'desc' %}
+{% endif %}
 <!DOCTYPE html>
 <html>
 	<head>
@@ -10,20 +20,25 @@
 		<div id="container">
 			<span id="loader" style="visibility:hidden;"><img src="static/loadingicon.gif" width="75" height="75" /></span>
 			<form action="/s" method="get" class="form-wrapper-01">
-				<input type="text" id="search" placeholder="Enter your keyword" name="q"><input type="submit" value="Search" id="submit" onclick="show_loader()">
+				<input type="text" id="search" placeholder="{{ queryString }}" name="q"><input type="submit" value="Search" id="submit" onclick="show_loader()">
 			</form>
 			{% if results -%}
 			<table id="results" summary="Search Results">
 				<thead>
-					<tr><th scope="col" class=titlecell>Title</th><th scope="col" class=sizecell>Size</th> <th scope="col" class=datecell>Age</th> <th scope="col" class=providercell>Provider</th></tr>
+					<tr>
+						<th scope="col" class="titlecell"><a href="/s?q={{ queryString }}">Title</a></th>
+						<th scope="col" class="sizecell"><a href="/s?q={{ queryString }}&sortkey=size&sortdir={{ sizedir }}">Size</th>
+						<th scope="col" class="datecell"><a href="/s?q={{ queryString }}&sortkey=age&sortdir={{ agedir }}">Age</th>
+						<th scope="col" class="providercell">Provider</th>
+					</tr>
 				</thead>
 				<tbody>
-				{% for row in results -%}
+				{% for result in results -%}
 				<tr>
-					<td class="titlecell"><a href= "{{ row['url'] }}">{{ row['title'] }}</a></td>
-					<td class="sizecell">{{ row['filesize'] }}</td>
-					<td class="datecell">{{ row['age'] }} d</td>
-					<td class="providercell"> <a href= "{{ row['providerurl'] }}">{{ row['providertitle'] }}</a></td>
+					<td class="titlecell"><a href= "{{ result.nzbURL }}">{{ result.title}}</a></td>
+					<td class="sizecell">{{ result.siSize() }}</td>
+					<td class="datecell">{{ result.calculateAge() }}</td>
+					<td class="providercell"> <a href= "{{ result.providerURL }}">{{ result.provider }}</a></td>
 				</tr>
 				{%- endfor %}
 				</tbody>

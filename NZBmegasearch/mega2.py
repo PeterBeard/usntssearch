@@ -28,7 +28,17 @@ SearchModule.loadSearchModules()
 @app.route('/s', methods=['GET'])
 def search():
 	cfg = config_settings.read_conf()
-	return megasearch.dosearch(request.args['q'], cfg)
+	if 'sortkey' in request.args:
+		sortkey = request.args['sortkey']
+	else:
+		sortkey = 'relevance'
+	
+	if 'sortdir' in request.args:
+		sortdir = request.args['sortdir']
+	else:
+		sortdir = 'asc'
+	
+	return megasearch.dosearch(request.args['q'], cfg, sortkey, sortdir)
 
 @app.route('/config', methods=['GET','POST'])
 def config():
