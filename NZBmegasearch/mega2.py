@@ -26,6 +26,7 @@ import config_settings
 import miscdefs
 
 logging.basicConfig(filename='nzbmegasearch.log',level=logging.INFO)
+log = logging.getLogger(__name__)
 
 app = Flask(__name__)
 SearchModule.loadSearchModules()
@@ -84,11 +85,21 @@ def main_index():
 def generic_error(error):
 	return main_index()
 
-if __name__ == "__main__":	
+if __name__ == "__main__":
 	if( ver_notify['chk'] == -1):
 		ver_notify['chk'] = miscdefs.chk(ver_notify['curver'])
 	chost = '0.0.0.0'
 	cport = int(cgen['portno'])
-
-	app.run(host=chost,port=cport)
+	debug_status = False
+	try:
+		app.run(host=chost,port=cport,debug=debug_status)
+	except KeyboardInterrupt:
+		log.info('Shutting down server')
+		shutdown_function = request.environ.get('werkzeug.server.shutdown')
+		if shutdown_function is None:
+			raise RuntimeError('Not running with Werkzeug')
+		shutdown_function()
+	except Exception as e:
+		log.critical('Failed to start Flask app: ' + str(e))
+		print 'Failed to start Flask app: ' + str(e)
 
