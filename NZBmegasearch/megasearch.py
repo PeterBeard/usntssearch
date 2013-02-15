@@ -16,9 +16,11 @@
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #    
 
 import time
+import logging
+
+from flask import render_template
 from operator import itemgetter
 from urllib2 import urlparse
-from flask import render_template
 
 import SearchModule
 
@@ -28,11 +30,9 @@ def dosearch(strsearch, cfg=None, sortkey='relevance', sortdir='asc', ver_notify
 	strsearch = strsearch.strip()
 	
 	if(len(strsearch)):
-		print 'searching'
 		results = SearchModule.performSearch(strsearch, cfg)
 	else:
 		return render_template('main_page.html',vr=ver_notify)
-	print 'search complete'
 	# Sort the results
 	if sortkey == 'age': # By age
 		results.sortByAge(sortdir)

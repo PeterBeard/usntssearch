@@ -15,7 +15,12 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import ConfigParser
+
+import logging
+
 from SearchModule import *
+
+log = logging.getLogger(__name__)
 
 # Search on Newznab
 class ab_Findnzb(SearchModule):
@@ -45,19 +50,17 @@ class ab_Findnzb(SearchModule):
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
-			print e
+			log.error('Failed to get response from server: ' + str(e))
 			return results
+		
 		data = http_result.text
 		data = data.replace("<newznab:attr", "<newznab_attr")
 			
 		#~ parse errors
 		try:
 			tree = ET.fromstring(data.encode('utf-8'))
-		except BaseException:
-			print "ERROR: Wrong API?"
-			return results
 		except Exception as e:
-			print e
+			log.error('Failed to parse data from server: ' + str(e))
 			return results
 
 		#~ successful parsing

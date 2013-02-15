@@ -17,13 +17,15 @@
 
 from flask import Flask
 from flask import request, Response
+import logging
 import os
 
 import SearchModule
 import megasearch
 import config_settings
 import miscdefs
-#from multiprocessing import Process
+
+logging.basicConfig(filename='nzbmegasearch.log',level=logging.INFO)
 
 app = Flask(__name__)
 SearchModule.loadSearchModules()

@@ -15,12 +15,15 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import config_settings
+import logging
 import os
 import requests
 import threading
 import time
 
 from SearchResults import *
+
+log = logging.getLogger(__name__)
 
 def loadSearchModules(moduleDir = None):
 	global loadedModules
@@ -29,29 +32,29 @@ def loadSearchModules(moduleDir = None):
 	searchModuleNames = [];
 	if moduleDir == None:
 		moduleDir = os.path.join(os.path.dirname(__file__),'SearchModules');
-	print 'Loading modules from: ' + moduleDir
+	log.info('Loading modules from: ' + moduleDir)
 
 	for file in os.listdir(moduleDir):
 		if file.endswith('.py') and file != '__init__.py':
 			searchModuleNames.append(file[0:-3])
 	if len(searchModuleNames) == 0:
-		print 'No search modules found.'
+		log.warning('No search modules found.')
 		return
 	else:
-		print 'Found ' + str(len(searchModuleNames)) + ' modules'
+		log.info('Found ' + str(len(searchModuleNames)) + ' modules')
 		
 	searchModuleNames = sorted(searchModuleNames)
 	# Import the modules that the user has enabled
-	print 'Importing: ' + ', '.join(searchModuleNames)
+	log.info('Importing: ' + ', '.join(searchModuleNames))
 	
 	for module in searchModuleNames:
 		try:
 			importedModules = __import__('SearchModules.' + module)
 		except Exception as e:
 			searchModuleNames.remove(module)
-			print 'Failed to import search module "' + module + '": ' + str(e)
+			log.error('Failed to import search module "' + module + '": ' + str(e))
 	
-	print 'Instantiating module classes'
+	log.info('Instantiating module classes')
 	# Instantiate the modules
 	for module in searchModuleNames:
 		try:
@@ -63,8 +66,8 @@ def loadSearchModules(moduleDir = None):
 		try:
 			loadedModules.append(targetClass())
 		except Exception as e:
-			print 'Error instantiating search module ' + module + ': ' + str(e)
-	print 'Module loading complete.\n'
+			log.error('Failed to instantiate search module ' + module + ': ' + str(e))
+	log.info('Module loading complete.')
 
 # Perform a search using all available modules
 def performSearch(queryString,  cfg):
@@ -87,7 +90,7 @@ def performSearch(queryString,  cfg):
 				threadHandles.append(t)
 
 			except Exception as e:
-				print 'Error starting thread for search module ' + module + ': ' + str(e)
+				log.error('Error starting thread for search module ' + module + ': ' + str(e))
 	# Wait for all the threads to finish
 	for t in threadHandles:
 		t.join()
@@ -98,7 +101,7 @@ def performSearch(queryString,  cfg):
 # The thread that performs searches and integrates the results from the various modules
 def performSearchThread(queryString, loadedModules, lock, cfg):
 	localResults = SearchResults()
-	print "Searching on " + cfg['shortName'] + " [T" + str(threading.current_thread().ident) + "]"
+	log.info("Searching on " + cfg['shortName'] + " [T" + str(threading.current_thread().ident) + "]")
 	for module in loadedModules:
 		if module.shortName == cfg['shortName']:
 			localResults = module.search(queryString, cfg)
@@ -107,7 +110,7 @@ def performSearchThread(queryString, loadedModules, lock, cfg):
 	try:
 		lock.release()
 	except Exception as e:
-		print 'Could not release search result lock: ' + str(e)
+		log.error('Could not release search result lock: ' + str(e))
 
 # Exception to be raised when a search function is not implemented
 class NotImplementedException(Exception):

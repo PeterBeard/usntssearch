@@ -14,6 +14,8 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
+import logging
+
 from SearchModule import *
 
 try:
@@ -22,6 +24,8 @@ try:
 except Exception:
 	from bs4 import BeautifulSoup, Tag # BeautifulSoup 4
 	bs_version = 4
+
+log = logging.getLogger(__name__)
 
 # Search on Womble's NZB Index
 class Womble(SearchModule):
@@ -40,12 +44,13 @@ class Womble(SearchModule):
 		urlParams = dict(
 			s=queryString,
 		)
+		results = SearchResults()
 		
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
-			print e
-			return []
+			log.error('Failed to get response from server: ' + str(e))
+			return results
 		# Parse the HTML with BS
 		data = http_result.text
 		
@@ -54,8 +59,6 @@ class Womble(SearchModule):
 			rows = soup.find_all('tr')
 		else:
 			rows = soup.findAll('tr')
-		
-		results = SearchResults()
 		
 		for row in rows:
 			if bs_version == 4:

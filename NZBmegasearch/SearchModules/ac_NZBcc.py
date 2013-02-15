@@ -14,12 +14,16 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
+import logging
+
 from SearchModule import *
 
 try:
 	from BeautifulSoup import BeautifulSoup
 except Exception:
 	from bs4 import BeautifulSoup # BeautifulSoup 4
+
+log = logging.getLogger(__name__)
 
 # Search on NZB.cc
 class ac_NZBcc(SearchModule):
@@ -46,7 +50,7 @@ class ac_NZBcc(SearchModule):
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
-			print e
+			log.error('Failed to get response from server: ' + str(e))
 			return results
 		data = http_result.text
 		# Start parsing the text

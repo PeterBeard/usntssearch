@@ -194,7 +194,6 @@ def html_builtin_output(cffile, genopt):
 
 # Read the config file and return the HTML page
 def config_read():
-	print 'reading config file'
 	cf,co = read_conf()
 	webbuf_body_bi = html_builtin_output(cf,co)
 	
@@ -204,4 +203,3 @@ def config_read():
 # Write HTTP POST data to the config file
 def config_write(request_form):
 	write_conf(request_form)	
-	#~ return config_read()

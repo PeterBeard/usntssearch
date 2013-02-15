@@ -14,7 +14,11 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
+import logging
+
 from SearchModule import *
+
+log = logging.getLogger(__name__)
 
 # Search on NZBx.co
 class ae_FTDworld(SearchModule):
@@ -41,19 +45,18 @@ class ae_FTDworld(SearchModule):
 		try:
 			http_result = requests.post(loginurl, data=urlParams)
 			data = http_result.json()
-			#~ print data
+			
 			self.cookie = {'name' : 'FTDWSESSID',
 					'val' : http_result.cookies['FTDWSESSID']}
-			print self.cookie
+			log.info('Cookie value: ' + self.cookie)
 			return data['goodToGo']
 		except Exception as e:
-			print e
+			log.info('Unable to login to server: ' + str(e))
 			return False
 		
 	# Perform a search using the given query string
 	def search(self, queryString, cfg):
 		#~ rt = self.dologin(cfg)
-		#~ print 'Login success:' + str(rt)
 		
 		# Get JSON
 		urlParams = dict(
@@ -66,7 +69,7 @@ class ae_FTDworld(SearchModule):
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
-			print e
+			log.error('Failed to get response from server: ' + str(e))
 			return results
 		
 		dataglob = http_result.json()
@@ -84,5 +87,5 @@ class ae_FTDworld(SearchModule):
 				
 				results.append(r)
 		else:
-			print 'Error parsing JSON returned by server.'
+			log.error('Failed to parse JSON returned by server.')
 		return results

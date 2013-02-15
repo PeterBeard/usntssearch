@@ -15,7 +15,10 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import difflib
+import logging
 import time
+
+log = logging.getLogger(__name__)
 
 # The set of results returned by a search
 class SearchResults(object):
@@ -47,7 +50,7 @@ class SearchResults(object):
 				r.score = r.score + difflib.SequenceMatcher(None, r.title.lower(), dottedQueryString).ratio()
 			except Exception as e:
 				r.score = 2
-				print 'Error calculating score: ' + str(e)
+				log.error('Error calculating score: ' + str(e))
 
 		# Now, sort the results by score
 		self.results.sort(key=lambda x: x.score, reverse=True)

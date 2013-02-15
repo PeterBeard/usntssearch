@@ -15,8 +15,11 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import json
+import logging
 
 from SearchModule import *
+
+log = logging.getLogger(__name__)
 
 # Search on NZBx.co
 class aa_NZBx(SearchModule):
@@ -41,13 +44,13 @@ class aa_NZBx(SearchModule):
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
-			print e
+			log.error('Failed to get response from server: ' + str(e))
 			return results
 		# Try to parse JSON
 		try:
 			data = http_result.json()
 		except Exception as e:
-			print 'Unable to parse JSON: ' + str(e)
+			log.error('Unable to parse JSON: ' + str(e))
 			return results
 		# Put the data in a result object and append it to the result list
 		for i in xrange(len(data)):
