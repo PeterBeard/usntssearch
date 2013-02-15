@@ -15,48 +15,40 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import ConfigParser
-import json
-import xml.etree.cElementTree as ET
 from SearchModule import *
-from urllib2 import urlparse
-
 
 # Search on Newznab
-class Newznab(SearchModule):
+class ad_NZBclub(SearchModule):
 	# Set up class variables
 	def __init__(self, configFile=None):
-		super(Newznab, self).__init__()
+		super(ad_NZBclub, self).__init__()
 		# Parse config file		
-		self.name = 'Newznab'
-		self.typesrch = 'NAB'
-		self.queryURL = 'xxxx'
-		self.baseURL = 'xxxx'
-		self.nzbDownloadBaseURL = 'NA'
-		self.builtin = 0
-	 
+		self.name = 'NZBClub'
+		self.shortName = 'CLB'
+		self.queryURL = 'https://www.nzbclub.com/nzbfeed.aspx'
+		self.baseURL = 'https://www.nzbclub.com'
+		self.active = 1
+		self.builtin = 1
+		self.login = 0
 	# Perform a search using the given query string
-	def search(self, queryString, cfg):
-		# Get text
-		urlParams = dict(
-			t='search',
-			q=queryString,
-			o='xml',
-			apikey=cfg['api']
-		)
-		baseURL = cfg['url'] + '/api'
+	def search(self, queryString, cfg):		
+		urlParams = dict(q =queryString,
+            ig= 1,
+            rpp= 200,
+            st= 5,
+            sp= 1,
+            ns= 1	)
 		
+        results = SearchResults()
 		try:
-			http_result = requests.get(url=baseURL, params=urlParams, verify=False, timeout=cfg['timeout'])
+			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
 			print e
-			return []
+			return results
 		data = http_result.text
-
-		# Try to parse the data
-		results = SearchResults()
-
 		data = data.replace("<newznab:attr", "<newznab_attr")
-
+		
+			
 		#~ parse errors
 		try:
 			tree = ET.fromstring(data.encode('utf-8'))
@@ -66,11 +58,6 @@ class Newznab(SearchModule):
 		except Exception as e:
 			print e
 			return results
-
-		#~ homemade lazy stuff
-		humanprovider = urlparse.urlparse(cfg['url']).hostname			
-		humanprovider = humanprovider.replace("www.", "")
-
 
 		#~ successful parsing
 		for elem in tree.iter('item'):
@@ -87,18 +74,15 @@ class Newznab(SearchModule):
 				if('name' in attr.attrib):
 					if (attr.attrib['name'] == 'poster'): 
 						elem_poster = attr.attrib['value']
+			
 			r = Result()
 			r.title = elem_title.text
 			r.poster = elem_poster
 			r.size = int(elem_url.attrib['length'])
-			r.timestamp = float(elem_postdate)
 			r.nzbURL = elem_url.attrib['url']
+			r.timestamp = int(elem_postdate)
 			r.provider = self.name
 			r.providerURL = self.baseURL
-
+			
 			results.append(r)
-		return results
-	# Show config options
-	def configurationHTML(self):
-		htmlBuffer = '-- Newznab Options --'
-		return htmlBuffer
+		return results		

@@ -29,17 +29,20 @@ class Womble(SearchModule):
 	def __init__(self):
 		super(Womble, self).__init__()
 		self.name = 'Womble\'s NZB Index'
+		self.shortName = 'WOM'
 		self.queryURL = 'http://newshost.co.za/'
 		self.baseURL = 'http://newshost.co.za'
+		self.builtin = 1
+		self.active = 1
 	# Perform a search using the given query string
-	def search(self, queryString):
+	def search(self, queryString, cfg):
 		# Get HTML
 		urlParams = dict(
 			s=queryString,
 		)
 		
 		try:
-			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False)
+			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
 			print e
 			return []
@@ -93,7 +96,7 @@ class Womble(SearchModule):
 						scale_factor = 10**6
 					elif ufilesize.find('GB') > -1:
 						scale_factor = 10**9
-					elif scale_factor.find('TB') > -1:
+					elif ufilesize.find('TB') > -1:
 						scale_factor = 10**12
 					
 					ufilesize = ufilesize[0:ufilesize.find('&')]

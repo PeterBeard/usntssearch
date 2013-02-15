@@ -30,6 +30,7 @@ def loadSearchModules(moduleDir = None):
 	if moduleDir == None:
 		moduleDir = os.path.join(os.path.dirname(__file__),'SearchModules');
 	print 'Loading modules from: ' + moduleDir
+
 	for file in os.listdir(moduleDir):
 		if file.endswith('.py') and file != '__init__.py':
 			searchModuleNames.append(file[0:-3])
@@ -38,6 +39,8 @@ def loadSearchModules(moduleDir = None):
 		return
 	else:
 		print 'Found ' + str(len(searchModuleNames)) + ' modules'
+		
+	searchModuleNames = sorted(searchModuleNames)
 	# Import the modules that the user has enabled
 	print 'Importing: ' + ', '.join(searchModuleNames)
 	
@@ -48,7 +51,7 @@ def loadSearchModules(moduleDir = None):
 			searchModuleNames.remove(module)
 			print 'Failed to import search module "' + module + '": ' + str(e)
 	
-	print 'instantiating module classes'
+	print 'Instantiating module classes'
 	# Instantiate the modules
 	for module in searchModuleNames:
 		try:
@@ -61,9 +64,11 @@ def loadSearchModules(moduleDir = None):
 			loadedModules.append(targetClass())
 		except Exception as e:
 			print 'Error instantiating search module ' + module + ': ' + str(e)
+	print 'Module loading complete.\n'
 
 # Perform a search using all available modules
-def performSearch(queryString, enabledModules = None, configOptions = None):
+def performSearch(queryString,  cfg):
+	queryString = queryString.strip()
 	# Perform the search using every module
 	global globalResults
 	# Load the modules if it hasn't already been done
@@ -73,14 +78,16 @@ def performSearch(queryString, enabledModules = None, configOptions = None):
 	globalResults = SearchResults()
 	threadHandles = []
 	lock = threading.Lock()
-	for module in loadedModules:
-		try:
-			if enabledModules == None or module.name in enabledModules:
-				t = threading.Thread(target=performSearchThread, args=(queryString,module,lock))
+	
+	for index in xrange(len(cfg)):
+		if(cfg[index]['valid']== '1'):
+			try:
+				t = threading.Thread(target=performSearchThread, name=cfg[index]['shortName'], args=(queryString,loadedModules,lock,cfg[index]))
 				t.start()
 				threadHandles.append(t)
-		except Exception as e:
-			print 'Error starting thread for search module ' + module + ': ' + str(e)
+
+			except Exception as e:
+				print 'Error starting thread for search module ' + module + ': ' + str(e)
 	# Wait for all the threads to finish
 	for t in threadHandles:
 		t.join()
@@ -89,9 +96,12 @@ def performSearch(queryString, enabledModules = None, configOptions = None):
 	return globalResults
 
 # The thread that performs searches and integrates the results from the various modules
-def performSearchThread(queryString, module, lock):
-	print 'starting search thread'
-	localResults = module.search(queryString)
+def performSearchThread(queryString, loadedModules, lock, cfg):
+	localResults = SearchResults()
+	print "Searching on " + cfg['shortName'] + " [T" + str(threading.current_thread().ident) + "]"
+	for module in loadedModules:
+		if module.shortName == cfg['shortName']:
+			localResults = module.search(queryString, cfg)
 	lock.acquire()
 	globalResults.append(localResults)
 	try:
@@ -112,14 +122,18 @@ class SearchModule(object):
 	# Set up class variables
 	def __init__(self):
 		self.name = 'Unnamed'
+		self.shortName = 'UNA'
 		self.queryURL = ''
 		self.baseURL = ''
 		self.nzbDownloadBaseURL = ''
 		self.apiKey = ''
 		self.userAgent = ''
+		self.builtin = 0
+		self.login = 0
+		self.active = 0
 	# Show the configuration options for this module
 	def configurationHTML(self):
 		return ''
 	# Perform a search using the given query string
-	def search(self, queryString):
+	def search(self, queryString, cfg):
 		raise NotImplementedException('This scraper does not have a search function.')

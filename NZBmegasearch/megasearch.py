@@ -20,23 +20,19 @@ from operator import itemgetter
 from urllib2 import urlparse
 from flask import render_template
 
-try:
-	from BeautifulSoup import BeautifulSoup
-except Exception:
-	from bs4 import BeautifulSoup # BeautifulSoup 4
-
 import SearchModule
 
-def dosearch(strsearch, cfg=None, sortkey='relevance', sortdir='asc'):
+def dosearch(strsearch, cfg=None, sortkey='relevance', sortdir='asc', ver_notify=''):
 	if cfg == None:
 		cfg = {'enabledModules':['nzbX.co','NZB.cc']}
 	strsearch = strsearch.strip()
-		
+	
 	if(len(strsearch)):
-		results = SearchModule.performSearch(strsearch, cfg['enabledModules'])
-		#results = summary_results(results,strsearch)
+		print 'searching'
+		results = SearchModule.performSearch(strsearch, cfg)
 	else:
-		return render_template('main_page.html')
+		return render_template('main_page.html',vr=ver_notify)
+	print 'search complete'
 	# Sort the results
 	if sortkey == 'age': # By age
 		results.sortByAge(sortdir)
@@ -45,50 +41,14 @@ def dosearch(strsearch, cfg=None, sortkey='relevance', sortdir='asc'):
 	else:
 		results.sortByRelevance(strsearch)
 	# Render the page
-	return render_template('main_page.html',results=results,sortkey=sortkey,sortdir=sortdir,queryString=strsearch)
+	return render_template('main_page.html',results=results,sortkey=sortkey,sortdir=sortdir,queryString=strsearch,vr=ver_notify)
 
 def sanitize_html(value):
-	VALID_TAGS = []
-	soup = BeautifulSoup(value.replace("<\/b>", ""))
-
-	for tag in soup.findAll(True):
-		if tag.name not in VALID_TAGS:
-			tag.hidden = True
-	
-	return soup.renderContents()
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
-def summary_results(rawResults,strsearch):
-	#~ sanitize
-	for provid in xrange(len(rawResults)):
-		for i in xrange(len(rawResults[provid])):
-			rawResults[provid][i]['title'] = sanitize_html(rawResults[provid][i]['title'])
-
-	results =[]
-	ptr = []
-	#~ all in one array
-	for provid in xrange(len(rawResults)):
-		for z in xrange(len(rawResults[provid])):
-			results.append(rawResults[provid][z])
-			ptr.append([provid, z])
-	
-	strsearch1 = strsearch.replace(" ", ".")
-	
-	results = sorted(results, key=itemgetter('posting_date_timestamp'), reverse=True) 	
-	for z in xrange(len(results)):
-		findone = 0
-		if(results[z]['title'].lower().find( strsearch.lower() ) != -1):
-			findone = 1
-		if(results[z]['title'].lower().find( strsearch1.lower()) != -1 ):
-			findone = 1 
-	
-		#~ check same name, == takes too much time
-		results[z]  ['ignore'] = 0			
-		#~ then update
-		if(findone==0):
-			results[z]['ignore'] = 1		
-
-	return results
+	if(len(value)):
+		value = value.replace("<\/b>", "")
+		value = value.replace("<b>", "")
+		value = value.replace("&quot;", "")	
+	return value
 
 #~ debug
 if __name__ == "__main__":

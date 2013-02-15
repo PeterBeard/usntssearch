@@ -22,22 +22,27 @@ except Exception:
 	from bs4 import BeautifulSoup # BeautifulSoup 4
 
 # Search on NZB.cc
-class NZBcc(SearchModule):
+class ac_NZBcc(SearchModule):
 	# Set up class variables
 	def __init__(self):
-		super(NZBcc, self).__init__()
+		super(ac_NZBcc, self).__init__()
 		self.name = 'NZB.cc'
+		self.shortName = 'NZB'
 		self.queryURL = 'https://nzb.cc/q.php'
 		self.baseURL = 'https://nzb.cc'
 		self.nzbDownloadBaseURL = 'http://nzb.cc/nzb.php?c='
+		self.active = 1
+		self.builtin = 1
+		self.login = 0
+		
 	# Perform a search using the given query string
-	def search(self, queryString):
+	def search(self, queryString, cfg):
 		# Get HTML
 		urlParams = dict(
 			q=queryString
 		)
 		try:
-			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False)
+			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
 			print e
 			return []
@@ -100,6 +105,7 @@ class NZBcc(SearchModule):
 			url = self.nzbDownloadBaseURL + id_nzb
 			
 			cstart = s8b+1
+
 			# Clean up the name
 			nstart = name.find('&quot;')+6
 			name = name[nstart:name.find('&quot;',nstart)]
