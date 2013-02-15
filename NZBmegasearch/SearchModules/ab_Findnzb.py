@@ -22,7 +22,7 @@ class ab_Findnzb(SearchModule):
 	# Set up class variables
 	def __init__(self, configFile=None):
 		super(ab_Findnzb, self).__init__()
-		# Parse config file		
+		# Parse config file
 		self.name = 'Findnzb'
 		self.shortName = 'FNB'
 		self.queryURL = 'https://findnzbs.info/api'
@@ -40,14 +40,15 @@ class ab_Findnzb(SearchModule):
 			o='xml',
 			apikey=self.api
 		)
+		results = SearchResults()
+		
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
 			print e
-			return []
+			return results
 		data = http_result.text
 		data = data.replace("<newznab:attr", "<newznab_attr")
-		results = SearchResults()
 			
 		#~ parse errors
 		try:

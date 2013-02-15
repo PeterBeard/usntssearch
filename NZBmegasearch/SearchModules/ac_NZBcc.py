@@ -41,11 +41,13 @@ class ac_NZBcc(SearchModule):
 		urlParams = dict(
 			q=queryString
 		)
+		results = SearchResults()
+		
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
 			print e
-			return []
+			return results
 		data = http_result.text
 		# Start parsing the text
 		cstart = 0
@@ -53,7 +55,6 @@ class ac_NZBcc(SearchModule):
 		cstart = data.find("[", cstart, cend)+1
 
 		#~ parse all members and put in parsed data
-		results = SearchResults()
 		inc=1
 		
 		while True:
