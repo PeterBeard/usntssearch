@@ -32,14 +32,16 @@ class ad_NZBclub(SearchModule):
 		self.login = 0
 	# Perform a search using the given query string
 	def search(self, queryString, cfg):		
-		urlParams = dict(q =queryString,
+		urlParams = dict(
+			q=queryString,
             ig= 1,
             rpp= 200,
             st= 5,
             sp= 1,
-            ns= 1	)
+            ns= 1
+		)
 		
-        results = SearchResults()
+		results = SearchResults()
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
 		except Exception as e:
