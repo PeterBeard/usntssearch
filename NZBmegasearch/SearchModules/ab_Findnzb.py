@@ -15,8 +15,8 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import ConfigParser
-
 import logging
+import xml.etree.cElementTree as ET
 
 from SearchModule import *
 
