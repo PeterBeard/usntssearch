@@ -48,7 +48,7 @@ class ae_FTDworld(SearchModule):
 			return data['goodToGo']
 		except Exception as e:
 			print e
-			return False			
+			return False
 		
 	# Perform a search using the given query string
 	def search(self, queryString, cfg):
@@ -70,16 +70,19 @@ class ae_FTDworld(SearchModule):
 			return results
 		
 		dataglob = http_result.json()
-		data = dataglob['data'];
+		if 'data' in dataglob:
+			data = dataglob['data'];
+					
+			for i in xrange(len(data)):
+				r = Result()
+				r.title = data[i]['Title']
+				r.size = int(data[i]['Size'])*1000000
+				r.nzbURL = self.nzbDownloadBaseURL + data[i]['id']
+				r.timestamp = int(data[i]['Created'])
+				r.provider = self.name
+				r.providerURL = self.baseURL
 				
-		for i in xrange(len(data)):
-			r = Result()
-			r.title = data[i]['Title']
-			r.size = int(data[i]['Size'])*1000000
-			r.nzbURL = self.nzbDownloadBaseURL + data[i]['id']
-			r.timestamp = int(data[i]['Created'])
-			r.provider = self.name
-			r.providerURL = self.baseURL
-			
-			results.append(r)
+				results.append(r)
+		else:
+			print 'Error parsing JSON returned by server.'
 		return results
