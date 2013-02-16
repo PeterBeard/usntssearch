@@ -78,6 +78,7 @@ def performSearch(queryString,  cfg):
 	if 'loadedModules' not in globals():
 		loadSearchModules()
 	# Iterate over all of the modules and start a thread for each one to perform its search
+	print 'Trying to start ' + str(len(cfg)) + ' search threads.'
 	globalResults = SearchResults()
 	threadHandles = []
 	lock = threading.Lock()
@@ -104,7 +105,10 @@ def performSearchThread(queryString, loadedModules, lock, cfg):
 	log.info("Searching on " + cfg['shortName'] + " [T" + str(threading.current_thread().ident) + "]")
 	for module in loadedModules:
 		if module.shortName == cfg['shortName']:
-			localResults = module.search(queryString, cfg)
+			try:
+				localResults = module.search(queryString, cfg)
+			except Exception as e:
+				log.error('Module ' + module.name + ' failed to perform search: ' + str(e))
 	lock.acquire()
 	globalResults.append(localResults)
 	try:

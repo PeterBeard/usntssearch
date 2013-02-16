@@ -31,6 +31,12 @@ log = logging.getLogger(__name__)
 app = Flask(__name__)
 SearchModule.loadSearchModules()
 cfg,cgen = config_settings.read_conf()
+# Try to create the cache directory if it doesn't exist
+try:
+	if not os.path.exists('cache'):
+		os.makedirs('cache')
+except Exception as e:
+	log.error('Failed to create cache directory: ' + str(e))
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 #~ versioning check
@@ -62,7 +68,7 @@ def search():
 	else:
 		sortdir = 'asc'
 	
-	return megasearch.dosearch(request.args['q'], cfg, sortkey, sortdir, ver_notify)
+	return megasearch.dosearch(request.args['q'], cfg, sortkey, sortdir, ver_notify, cgen['max_cache_age'])
 
 @app.route('/config', methods=['GET','POST'])
 @miscdefs.requires_auth

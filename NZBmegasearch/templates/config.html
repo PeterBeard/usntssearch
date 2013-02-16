@@ -14,7 +14,10 @@
 <tr><th scope="col">General Options</th></tr></thead><tbody>
 	<tr>
 		<td>Port: <input type="input" name="port" value="{{ genopt['portno'] }}" size="10"></td>
-	</tr>	
+	</tr>
+	<tr>
+		<td>Maximum result cache age (hours; 0 to disable caching): <input type="text" name="max_cache_age" value="{{ genopt['max_cache_age'] }}" size="10" /></td>
+	</tr>
 	<tr>
 		<td>	User: <input type="input" name="general_usr" value="{{ genopt['general_usr'] }}" size="12">
 			Pass: <input type="password" name="general_pwd" value="{{ genopt['general_pwd'] }}" size="12"></td>

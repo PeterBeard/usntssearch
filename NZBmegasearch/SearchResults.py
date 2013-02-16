@@ -45,9 +45,9 @@ class SearchResults(object):
 		# difflib can be used to calculate the similarities of two strings
 		# difflib.SequenceMatcher(isjunk=None, a='', b='', autojunk=True)
 		for r in self.results:
+			title = r.title.lower()
 			try:
-				r.score = difflib.SequenceMatcher(None, r.title.lower(), queryString).ratio()
-				r.score = r.score + difflib.SequenceMatcher(None, r.title.lower(), dottedQueryString).ratio()
+				r.score = difflib.SequenceMatcher(None, title, queryString).ratio() + difflib.SequenceMatcher(None, title, dottedQueryString).ratio()
 			except Exception as e:
 				r.score = 2
 				log.error('Error calculating score: ' + str(e))
@@ -75,26 +75,26 @@ class SearchResults(object):
 		# Sort the list
 		self.results.sort(key=lambda x: x.size, reverse=reverse)
 	# Remove duplicate items from the list
-	#	Doesn't really remove anything, but gives the user a choice of providers where possible
+	# Doesn't really remove anything, but gives the user a choice of providers where possible
 	def removeDuplicates(self):
 		pass
 
 # Object to contain data about an NZB search result
 class Result(object):
-	def __init__(self):
-		self.title = 'Not Set'
-		self.nzbURL = '#'
-		self.nfoURL = '#'
-		self.timestamp = 0
-		self.age = 0
-		self.size = 0
-		self.filesize = 0
+	def __init__(self, title='Not Set', nzbURL='#', nfoURL='#', timestamp=0, age=0, size=0, filesize=0, poster='Not Set', group='Not Set', provider='Not Set', providerURL='#'):
+		self.title = title
+		self.nzbURL = nzbURL
+		self.nfoURL = nfoURL
+		self.timestamp = timestamp
+		self.age = age
+		self.size = size
+		self.filesize = filesize
 		
-		self.poster = 'Not Set'
-		self.group = 'Not Set'
+		self.poster = poster
+		self.group = group
 		
-		self.provider = 'Not Set'
-		self.providerURL = '#'
+		self.provider = provider
+		self.providerURL = providerURL
 	# Calculate the age of the post in days
 	def calculateAge(self):
 		if self.age == 0:
