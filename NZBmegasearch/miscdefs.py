@@ -33,6 +33,7 @@ import urllib
 import datetime
 import json
 from operator import itemgetter
+import hashlib
 
 log = logging.getLogger(__name__)
 
@@ -44,24 +45,37 @@ def connectinfo():
 class Auth:
 	def __init__(self, cfgsetsp):
 		#~ another instance to not use ptrs
-		self.cfgsets = 	config_settings.CfgSettings()	
+		self.cfgsets = 	config_settings.CfgSettings()
 	
+	# Calculate the hash of the password using the given salt
+	#   If no salt is provided, the string 'nzbmegasearch' run through two rounds of SHA-256 is used (in hex)
+	@staticmethod
+	def get_digest(password, salt='1e1a99e24a433fddb9301eded9130370821cad9053044db1646f05ee22e50e6e'):
+		# Prepend the salt
+		password = salt + password;
+		# Perform several thousand rounds of SHA-256 to make sure this takes a while
+		for i in range(0,10000):
+			password = hashlib.sha256(password).hexdigest()
+		return password
+
+	# Compare the username and password to the stored values. Return True if they match and False otherwise
+	#   In the interest of backwards-compatibility, passwords are compared both hashed and as cleartext -- a match in either case will authenticate the user
 	def check_auth(self, username, password, mode):
 		if(mode == 0):
-			if(username == self.cfgsets.cgen['general_usr'] and password == self.cfgsets.cgen['general_pwd']):
+			if(username == self.cfgsets.cgen['general_usr'] and (self.get_digest(password) == self.cfgsets.cgen['general_pwd'] or password == self.cfgsets.cgen['general_pwd'])):
 				return True
 		if(mode == 1):
 			if(len(self.cfgsets.cgen['config_user']) != 0):
-				if(username == self.cfgsets.cgen['config_user'] and password == self.cfgsets.cgen['config_pwd']):
+				if(username == self.cfgsets.cgen['config_user'] and (self.get_digest(password) == self.cfgsets.cgen['config_pwd'] or password == self.cfgsets.cgen['config_pwd'])):
 					return True
 			else:
-				if(username == self.cfgsets.cgen['general_usr'] and password == self.cfgsets.cgen['general_pwd']):
+				if(username == self.cfgsets.cgen['general_usr'] and (self.get_digest(password) == self.cfgsets.cgen['general_pwd'] or password == self.cfgsets.cgen['general_pwd'])):
 					return True
 		return False			
 			
 	def authenticate(self):
-		"""Sends a 401 response that enables basic auth"""
-		retres =  Response(
+		# Sends a 401 response that enables basic auth
+		retres = Response(
 		'Could not verify your access level for that URL.\n'
 		'You have to login with proper credentials', 401,
 		{'WWW-Authenticate': 'Basic realm="Login Required"'})

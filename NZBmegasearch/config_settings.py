@@ -23,6 +23,7 @@ import SearchModule
 import DeepsearchModule
 import copy
 import megasearch
+import miscdefs
 
 MAX_PROVIDER_NUMBER = 20
 
@@ -57,9 +58,10 @@ class CfgSettings:
 		parser.add_section('general')
 		parser.set('general', 'port', request_form['port'].replace(" ", ""))
 		parser.set('general', 'general_user', request_form['general_usr'].replace(" ", ""))
-		parser.set('general', 'general_pwd', request_form['general_pwd'].replace(" ", ""))
 		parser.set('general', 'config_user', request_form['config_user'].replace(" ", ""))
-		parser.set('general', 'config_pwd', request_form['config_pwd'].replace(" ", ""))
+		# HTTP Auth passwords are hashed before being stored
+		parser.set('general', 'general_pwd', miscdefs.Auth.get_digest(request_form['general_pwd'].replace(" ", "")))
+		parser.set('general', 'config_pwd', miscdefs.Auth.get_digest(request_form['config_pwd'].replace(" ", "")))
 		parser.set('general', 'general_apikey', request_form['general_apikey'].replace(" ", ""))
 		parser.set('general', 'searchaddontxt', request_form['searchaddontxt'])
 		parser.set('general', 'general_https', '0')

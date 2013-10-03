@@ -48,18 +48,24 @@ sessionid_string = base64.urlsafe_b64encode(os.urandom(10)).replace('-','').repl
 def reload_all():
 	print '>> Bootstrapping...'
 	global cfgsets, sugg, ds, mega_parall, wrp, apiresp, auth
+	# Loading config settings
 	cfgsets = config_settings.CfgSettings()	
 	cfgsets.cgen['large_server'] = LARGESERVER
+
 	sugg = SuggestionResponses(cfgsets.cfg, cfgsets.cgen)
+
 	ds = DeepsearchModule.DeepSearch(cfgsets.cfg_deep, cfgsets.cgen)
+
 	wrp = Warper (cfgsets.cgen, cfgsets.cfg, ds)
+
 	mega_parall = megasearch.DoParallelSearch(cfgsets.cfg, cfgsets.cgen, ds, wrp)
+
 	apiresp = ApiResponses(cfgsets.cfg, wrp, ds)
+
 	auth = miscdefs.Auth(cfgsets)
-	
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-motd = '\n\n~*~ ~*~ NZBMegasearcH ~*~ ~*~'
+motd = '\n~*~ ~*~ NZBMegasearcH ~*~ ~*~'
 print motd
 
 DEBUGFLAG = False
@@ -80,7 +86,7 @@ if(len(sys.argv) > 1):
 			DEBUGFLAG = True	
 
 		if(argv == 'large'):
-			print '====== GUNICORN + NGIX server ======'
+			print '====== GUNICORN + NGINX server ======'
 			LARGESERVER = True
 
 		if(argv == 'daemon'):
@@ -91,7 +97,7 @@ if(len(sys.argv) > 1):
 #~ detect if started from gunicorn
 oshift_dirconf = os.getenv('OPENSHIFT_DATA_DIR', '')
 if( __name__ == 'mega2' and len(oshift_dirconf)==0):
-	print '====== GUNICORN + NGIX server ======'
+	print '====== GUNICORN + NGINX server ======'
 	LARGESERVER = True
 	
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
