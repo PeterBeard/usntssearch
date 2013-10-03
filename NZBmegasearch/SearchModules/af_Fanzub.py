@@ -1,5 +1,5 @@
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #    
-#~ This file is part of NZBmegasearch by pillone.
+#~ This file is part of NZBmegasearch by 0byte.
 #~ 
 #~ NZBmegasearch is free software: you can redistribute it and/or modify
 #~ it under the terms of the GNU General Public License as published by
@@ -35,53 +35,40 @@ class af_Fanzub(SearchModule):
 		self.active = 0
 		self.builtin = 1
 		self.login = 0
+		self.inapi = 1
+		self.api_catsearch = 0
+		self.agent_headers = {	'User-Agent': 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1' }	
 		
+		self.categories = {'Console': {'code':[], 'pretty': ''},
+							'Movie' : {'code': ['Anime'], 'pretty': 'Anime'},
+ 							'Movie_HD' : {'code': ['Anime'], 'pretty': 'Anime'},
+							'Movie_SD' : {'code': ['Anime'], 'pretty': 'Anime'},
+							'Audio' : {'code': [], 'pretty': ''},
+							'PC' : {'code': [], 'pretty': ''},
+							'TV' : {'code': ['Anime'], 'pretty': 'Anime'},
+							'TV_SD' : {'code': ['Anime'], 'pretty': 'Anime'},
+							'TV_HD' : {'code': ['Anime'], 'pretty': 'Anime'},
+							'XXX' : {'code': [], 'pretty': ''},
+							'Other' : {'code': [], 'pretty': ''},
+							'Ebook' : {'code': [], 'pretty': ''},
+							'Comics' : {'code': [], 'pretty': ''},
+							} 
+		self.category_inv= {}
+		for key in self.categories.keys():
+			prettyval = self.categories[key]['pretty']
+			for i in xrange(len(self.categories[key]['code'])):
+				val = self.categories[key]['code'][i]
+				self.category_inv[str(val)] = prettyval
+						
 	# Perform a search using the given query string
 	def search(self, queryString, cfg):		
 		urlParams = dict(
 			q=queryString
 		)
-		results = SearchResults()
-		
-		try:
-			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
-		except Exception as e:
-			log.error('Failed to get response from server: ' + str(e))
-			return results
-		data = http_result.text
-		data = data.replace("<newznab:attr", "<newznab_attr")
-		
-		#~ parse errors
-		try:
-			tree = ET.fromstring(data.encode('utf-8'))
-		except Exception as e:
-			log.error('Failed to parse data from server: ' + str(e))
-			return results
 
-		#~ successful parsing
-		for elem in tree.iter('item'):
-			elem_title = elem.find("title")
-			elem_url = elem.find("enclosure")
-			elem_pubdate = elem.find("pubDate")
-			len_elem_pubdate = len(elem_pubdate.text)
-			#~ Tue, 22 Jan 2013 17:36:23 +0000
-			#~ removes gmt shift
-			elem_postdate =  time.mktime(datetime.datetime.strptime(elem_pubdate.text[0:len_elem_pubdate-6], "%a, %d %b %Y %H:%M:%S").timetuple())
-			elem_poster = ''
-			
-			for attr in elem.iter('newznab_attr'):
-				if('name' in attr.attrib):
-					if (attr.attrib['name'] == 'poster'): 
-						elem_poster = attr.attrib['value']
+		parsed_data = self.parse_xmlsearch(urlParams, cfg['timeout'])		
+		for i in xrange(len(parsed_data)):
+			parsed_data[i]['categ'] = {'Anime': 1}
 
-			r = Result()
-			r.title = elem_title.text
-			r.poster = elem_poster
-			r.size = int(elem_url.attrib['length'])
-			r.nzbURL = elem_url.attrib['url']
-			r.timestamp = int(elem_postdate)
-			r.provider = self.name
-			r.providerURL = self.baseURL
-			
-			results.append(r)
-		return results		
+		return parsed_data
+
