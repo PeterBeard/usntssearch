@@ -173,8 +173,11 @@ def static_from_root():
 @auth.requires_auth
 def search():
 	if(first_time and cfgsets.cgen['large_server'] == False):
-		return (main_index)
-	
+		return main_index()
+	# Make sure the user actually entered a search query
+	if len(request.args.get('q')) == 0:
+		return main_index()
+
 	sugg.asktrend_allparallel()	
 	#~ parallel suggestion and search
 	if(cfgsets.cgen['general_suggestion'] == 1):
