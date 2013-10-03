@@ -24,6 +24,7 @@ import DeepsearchModule
 import copy
 import megasearch
 import miscdefs
+import random
 
 MAX_PROVIDER_NUMBER = 20
 
@@ -53,15 +54,31 @@ class CfgSettings:
 	def	write(self, request_form):
 		parser = SafeConfigParser()
 
+		# Get user names
+		gen_user = request_form['general_usr'].replace(" ", "")
+		conf_user = request_form['config_user'].replace(" ", "")
+		# Generate a salt to use for password storage
+		pw_salt = miscdefs.Auth.get_digest(str(random.random()) + gen_user + conf_user)
+		# Get passwords and calculate hashes
+		gen_pw = miscdefs.Auth.get_digest(request_form['general_pwd'].replace(" ", ""), pw_salt)
+		conf_pw = miscdefs.Auth.get_digest(request_form['config_pwd'].replace(" ", ""), pw_salt)
+
+		# Set passwords to blank if no user names were specified
+		if gen_user == '':
+			gen_pw = ''
+		if conf_user == '':
+			conf_pw = ''
+
 		#~ general settings
 		parser.add_section('speed_option')
 		parser.add_section('general')
 		parser.set('general', 'port', request_form['port'].replace(" ", ""))
-		parser.set('general', 'general_user', request_form['general_usr'].replace(" ", ""))
-		parser.set('general', 'config_user', request_form['config_user'].replace(" ", ""))
+		parser.set('general', 'general_user', gen_user)
+		parser.set('general', 'config_user', conf_user)
 		# HTTP Auth passwords are hashed before being stored
-		parser.set('general', 'general_pwd', miscdefs.Auth.get_digest(request_form['general_pwd'].replace(" ", "")))
-		parser.set('general', 'config_pwd', miscdefs.Auth.get_digest(request_form['config_pwd'].replace(" ", "")))
+		parser.set('general', 'general_pwd', gen_pw)
+		parser.set('general', 'config_pwd', conf_pw)
+		parser.set('general', 'httpauth_salt', pw_salt)
 		parser.set('general', 'general_apikey', request_form['general_apikey'].replace(" ", ""))
 		parser.set('general', 'searchaddontxt', request_form['searchaddontxt'])
 		parser.set('general', 'general_https', '0')
@@ -258,9 +275,10 @@ class CfgSettings:
 	def read_conf_general(self, forcedcustom=''): 
 		parser = SafeConfigParser()
 		parser.read(self.dirconf+'builtin_params.ini')
-		portno = parser.getint('general', 'port')	
+		portno = parser.getint('general', 'port')
+		httpauth_salt = parser.get('general', 'httpauth_salt');
 		gen_user = parser.get('general', 'general_user')	
-		gen_pwd = parser.get('general', 'general_pwd')	
+		gen_pwd = parser.get('general', 'general_pwd')
 		config_user = parser.get('general', 'config_user')	
 		config_pwd = parser.get('general', 'config_pwd')
 		gen_https = parser.getint('general', 'general_https')
@@ -284,6 +302,7 @@ class CfgSettings:
 		searchaddontxt = parser.get('general', 'searchaddontxt')
 		
 		self.cgen = {'portno': portno, 'general_usr' : gen_user, 'general_pwd' : gen_pwd, 'general_trend' : gen_trd,
+				'httpauth_salt':httpauth_salt,
 				'config_user':config_user,
 				'config_pwd':config_pwd,
 				'smartsearch':smartsearch,
@@ -354,6 +373,8 @@ class CfgSettings:
 				self.cgen['general_https'] = cst_parser.getint('general', 'general_https')			
 			if (cst_parser.has_option('general', 'port')):
 				self.cgen['portno'] = cst_parser.getint('general', 'port')	
+			if(cst_parser.has_option('general', 'httpauth_salt')):
+				self.cgen['httpauth_salt'] = cst_parser.get('general', 'httpauth_salt') 
 			if(cst_parser.has_option('general', 'general_user')):
 				self.cgen['general_usr'] = cst_parser.get('general', 'general_user') 
 				self.cgen['general_pwd'] = cst_parser.get('general', 'general_pwd')	

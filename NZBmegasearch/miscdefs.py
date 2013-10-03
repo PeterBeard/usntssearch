@@ -62,14 +62,14 @@ class Auth:
 	#   In the interest of backwards-compatibility, passwords are compared both hashed and as cleartext -- a match in either case will authenticate the user
 	def check_auth(self, username, password, mode):
 		if(mode == 0):
-			if(username == self.cfgsets.cgen['general_usr'] and (self.get_digest(password) == self.cfgsets.cgen['general_pwd'] or password == self.cfgsets.cgen['general_pwd'])):
+			if(username == self.cfgsets.cgen['general_usr'] and (self.get_digest(password, self.cfgsets.cgen['httpauth_salt']) == self.cfgsets.cgen['general_pwd'] or password == self.cfgsets.cgen['general_pwd'])):
 				return True
 		if(mode == 1):
 			if(len(self.cfgsets.cgen['config_user']) != 0):
-				if(username == self.cfgsets.cgen['config_user'] and (self.get_digest(password) == self.cfgsets.cgen['config_pwd'] or password == self.cfgsets.cgen['config_pwd'])):
+				if(username == self.cfgsets.cgen['config_user'] and (self.get_digest(password, self.cfgsets.cgen['httpauth_salt']) == self.cfgsets.cgen['config_pwd'] or password == self.cfgsets.cgen['config_pwd'])):
 					return True
 			else:
-				if(username == self.cfgsets.cgen['general_usr'] and (self.get_digest(password) == self.cfgsets.cgen['general_pwd'] or password == self.cfgsets.cgen['general_pwd'])):
+				if(username == self.cfgsets.cgen['general_usr'] and (self.get_digest(password, self.cfgsets.cgen['httpauth_salt']) == self.cfgsets.cgen['general_pwd'] or password == self.cfgsets.cgen['general_pwd'])):
 					return True
 		return False			
 			
@@ -88,6 +88,7 @@ class Auth:
 			self.cfgsets.refresh()
 			if(len(self.cfgsets.cgen['general_usr']) != 0):
 				auth = request.authorization
+				print auth
 				if not auth or not self.check_auth(auth.username, auth.password,0):
 					sret = self.authenticate()
 					return sret
