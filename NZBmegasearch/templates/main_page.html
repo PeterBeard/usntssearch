@@ -57,6 +57,13 @@
 			{{ motd|safe  }}
 			</div>
 
+			{% set messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+			{% for category, message in messages %}
+			<p class="flash {{ category }}">{{message}}</p>
+			{% endfor %}
+			{% endif %}
+
 			<div class="titlemain"><img src="static/title.png" width="387" height="" alt="NZBmegasearcH"/></div>
 			<form action="/s" method="get" id="search-form">
 				<div id="search-terms">
@@ -236,6 +243,8 @@
 
 	    <script type="text/javascript">
 	    $(document).ready(function() {
+			// Auto-dismiss any flash messages after 5 seconds
+			setTimeout(function(){$('.flash').fadeOut(750);}, 5000);
 
  			$("a#tosab_lnk").click(function () {
 				var addressValue = $(this).attr("name");

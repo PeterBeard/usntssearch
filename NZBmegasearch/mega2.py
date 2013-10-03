@@ -14,7 +14,7 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #    
-from flask import Flask, request, Response, redirect, render_template, send_from_directory, jsonify
+from flask import Flask, request, Response, redirect, render_template, send_from_directory, jsonify, flash
 from urlparse import urlparse
 import logging
 import logging.handlers
@@ -125,7 +125,9 @@ handler.setFormatter(formatter)
 log.addHandler(handler)
 log.info(motd)
 templatedir = SearchModule.resource_path('templates')
-app = Flask(__name__, template_folder=templatedir)	 
+app = Flask(__name__, template_folder=templatedir)
+# Generate a session key
+app.secret_key = os.urandom(24)
 
 SearchModule.loadSearchModules()
 if(DEBUGFLAG):
@@ -176,6 +178,7 @@ def search():
 		return main_index()
 	# Make sure the user actually entered a search query
 	if len(request.args.get('q')) == 0:
+		flash('Please enter a non-empty search query.','error')
 		return main_index()
 
 	sugg.asktrend_allparallel()	
@@ -216,7 +219,7 @@ def config():
 
  	if(cfgsets.cgen['large_server'] == False):
 		return cfgsets.edit_config()
-	else:	
+	else:
 		return main_index();
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
@@ -246,7 +249,7 @@ def tonzbget():
  
 @app.route('/', methods=['GET','POST'])
 @auth.requires_auth
-def main_index():	
+def main_index():
 	#~ flask bug in threads, had to solve like that
 	cfgsets.cgen['large_server'] = LARGESERVER
 	#~ ~ 
@@ -255,6 +258,7 @@ def main_index():
 		if request.method == 'POST':
 			cfgsets.write(request.form)
 			first_time = 0
+			flash('Configuration saved.','info')
 			reload_all()
 
 		if first_time == 1:
@@ -318,3 +322,4 @@ if __name__ == "__main__":
 		ctx.use_certificate_file(certdir+'server.crt')
 	
 	app.run(host=chost,port=cfgsets.cgen['portno'], debug = DEBUGFLAG, ssl_context=ctx)
+

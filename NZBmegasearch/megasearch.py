@@ -26,7 +26,7 @@ import requests
 import time
 from operator import itemgetter
 from urllib2 import urlparse
-from flask import render_template, Response
+from flask import render_template, Response, flash
 import SearchModule
 import logging
 import base64

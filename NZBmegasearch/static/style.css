@@ -18,6 +18,26 @@ h4 {
 	font-size: 1.1em;
 }
 
+p.flash {
+	border: 5px solid #333;
+	font: 16px/26px Courier, monospace;
+	font-weight: bold;
+	margin: 20px 0;
+	padding: 10px;
+	text-align: center;
+	width: 100%;
+}
+p.error {
+	background: #c33 none;
+	border-color: #933;
+	color: #fff;
+}
+p.info {
+	background: #3c3 none;
+	border-color: #393;
+	color: #fff;
+}
+
 /* Link Styles */
 a:link, a:active, a:visited, a:hover {
 	color: #075b66;
