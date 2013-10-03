@@ -14,6 +14,7 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #    
+
 import json
 from sets import Set
 import decimal
@@ -44,6 +45,7 @@ def getdomainext( ):
 	sname = s.getsockname()[0]
 	s.close()
 	return sname
+
 
 def listpossiblesearchoptions():
 	possibleopt = [ ['1080p', 'HD 1080p',''],
@@ -490,6 +492,7 @@ class DoParallelSearch:
 												sid = params['sid'],
 												large_server = self.cgen['large_server'],
 												motd = params['motd'] )
+
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 def summary_results(rawResults, strsearch, logic_items=[]):

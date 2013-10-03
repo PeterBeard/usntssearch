@@ -1,13 +1,3 @@
-{% set sizedir = 'asc' %}
-{% set agedir = 'asc' %}
-{% if queryString is not defined%}
-{%     set queryString = 'Enter your keyword' %}
-{% endif %}
-{% if sortkey == 'size' and sortdir == 'asc' %}
-{%     set sizedir = 'desc' %}
-{% elif sortkey == 'age' and sortdir == 'asc' %}
-{%     set agedir = 'desc' %}
-{% endif %}
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -159,15 +149,7 @@
 						<td class="datecell">{{ row['age'] }}</td>
 						<td class="providercell"> <a href= "{{ row['details_deref'] }}">{{ row['providertitle'] }}</a></td>
 					</tr>
-				</thead>
-				<tbody>
-				{% for result in results -%}
-				<tr>
-					<td class="titlecell"><a href= "{{ result.nzbURL }}">{{ result.title}}</a></td>
-					<td class="sizecell">{{ result.siSize() }}</td>
-					<td class="datecell">{{ result.calculateAge() }}</td>
-					<td class="providercell"> <a href= "{{ result.providerURL }}">{{ result.provider }}</a></td>
-				</tr>
+					{%- endif %}
 				{%- endfor %}
 				</tbody>
 			</table>

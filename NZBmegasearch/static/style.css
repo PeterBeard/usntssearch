@@ -330,7 +330,6 @@ div#container
 }
 
 .providercell {
-	min-width: 120px;
 	width: 10%;
 	text-align: center;	
 }
@@ -445,4 +444,3 @@ div#container
 
 .imgdisplayed {
  }
-

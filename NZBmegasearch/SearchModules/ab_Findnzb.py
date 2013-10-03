@@ -15,12 +15,7 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 import ConfigParser
-import logging
-import xml.etree.cElementTree as ET
-
 from SearchModule import *
-
-log = logging.getLogger(__name__)
 
 # Search on Newznab
 class ab_Findnzb(SearchModule):
@@ -28,7 +23,7 @@ class ab_Findnzb(SearchModule):
 	# Set up class variables
 	def __init__(self, configFile=None):
 		super(ab_Findnzb, self).__init__()
-		# Parse config file
+		# Parse config file		
 		self.name = 'Findnzb'
 		self.typesrch = 'FNB'
 		self.queryURL = 'http://findnzbs.info/api'
@@ -82,51 +77,6 @@ class ab_Findnzb(SearchModule):
 			o='xml',
 			apikey=self.api
 		)
-		'''results = SearchResults()
-		
-		try:
-			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])
-		except Exception as e:
-			log.error('Failed to get response from server: ' + str(e))
-			return results
-		
-		data = http_result.text
-		data = data.replace("<newznab:attr", "<newznab_attr")
-			
-		#~ parse errors
-		try:
-			tree = ET.fromstring(data.encode('utf-8'))
-		except Exception as e:
-			log.error('Failed to parse data from server: ' + str(e))
-			return results
-
-		#~ successful parsing
-		for elem in tree.iter('item'):
-			elem_title = elem.find("title")
-			elem_url = elem.find("enclosure")
-			elem_pubdate = elem.find("pubDate")
-			len_elem_pubdate = len(elem_pubdate.text)
-			#~ Tue, 22 Jan 2013 17:36:23 +0000
-			#~ removes gmt shift
-			elem_postdate =  time.mktime(datetime.datetime.strptime(elem_pubdate.text[0:len_elem_pubdate-6], "%a, %d %b %Y %H:%M:%S").timetuple())
-			elem_poster = ''
-			
-			for attr in elem.iter('newznab_attr'):
-				if('name' in attr.attrib):
-					if (attr.attrib['name'] == 'poster'): 
-						elem_poster = attr.attrib['value']
-			r = Result()
-			r.title = elem_title.text
-			r.poster = elem_poster
-			r.size = int(elem_url.attrib['length'])
-			r.nzbURL = elem_url.attrib['url']
-			r.timestamp = int(elem_postdate)
-			r.provider = self.name
-			r.providerURL = self.baseURL
-			
-			results.append(r)
-		'''return results		
 		
 		parsed_data = self.parse_xmlsearch(urlParams, cfg['timeout'])		
 		return parsed_data		
-

@@ -6,7 +6,6 @@ Are you tired to search by using many different sites (nzb.cc, omgwtfnzbs, nzb.s
 
 Technically speaking: NZBmegasearcH is a meta-search engine that retreives data from your favourite NZB indices.
 
-=======
 That's more: you can configure to use it with your SB and CP as a unique provider.
 
 *Features*:
@@ -20,7 +19,6 @@ That's more: you can configure to use it with your SB and CP as a unique provide
 * Gives appropriate search suggestions
 * Really small memory and CPU footprint
 * SSH and user identification supported
->>>>>>> upstream/master
 
 It is written in Python and it works on linux, mac, win. Windows binaries are also available.
 
@@ -95,4 +93,3 @@ More updates are available in changelog.txt
 <a title="website statistics" href="http://statcounter.com/" 
 target="_blank"><img
 src="http://c.statcounter.com/8769563/0/45111251/0/" alt="website statistics" style="border:none;"></a>
-

@@ -57,6 +57,7 @@ def reload_all():
 	apiresp = ApiResponses(cfgsets.cfg, wrp, ds)
 	auth = miscdefs.Auth(cfgsets)
 	
+
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 motd = '\n\n~*~ ~*~ NZBMegasearcH ~*~ ~*~'
 print motd
@@ -94,6 +95,7 @@ if( __name__ == 'mega2' and len(oshift_dirconf)==0):
 	LARGESERVER = True
 	
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
 cver = miscdefs.ChkVersion(DEBUGFLAG) 
 print '>> version: '+ str(cver.ver_notify['curver'])
 motd = motd  + ' v.'+str(cver.ver_notify['curver']) + 'large_server: ' + str(LARGESERVER) + ' debug: ' + str(DEBUGFLAG)
@@ -307,4 +309,3 @@ if __name__ == "__main__":
 		ctx.use_certificate_file(certdir+'server.crt')
 	
 	app.run(host=chost,port=cfgsets.cgen['portno'], debug = DEBUGFLAG, ssl_context=ctx)
-

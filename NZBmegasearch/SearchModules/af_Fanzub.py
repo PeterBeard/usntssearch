@@ -14,13 +14,8 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
-import logging
-import xml.etree.cElementTree as ET
-
 import ConfigParser
 from SearchModule import *
-
-log = logging.getLogger(__name__)
 
 # Search on Newznab
 class af_Fanzub(SearchModule):
@@ -29,7 +24,7 @@ class af_Fanzub(SearchModule):
 		super(af_Fanzub, self).__init__()
 		# Parse config file		
 		self.name = 'Fanzub'
-		self.shortName = 'FAN'
+		self.typesrch = 'FAN'
 		self.queryURL = 'https://www.fanzub.com/rss'
 		self.baseURL = 'https://www.fanzub.com'
 		self.active = 0
@@ -70,5 +65,4 @@ class af_Fanzub(SearchModule):
 		for i in xrange(len(parsed_data)):
 			parsed_data[i]['categ'] = {'Anime': 1}
 
-		return parsed_data
-
+		return parsed_data		

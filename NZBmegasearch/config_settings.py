@@ -26,6 +26,7 @@ import megasearch
 
 MAX_PROVIDER_NUMBER = 20
 
+
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 class CfgSettings:
 	
@@ -120,25 +121,6 @@ class CfgSettings:
 					counter = counter + 1
 		parser.set('general', 'numserver', str(counter-1))
 
-<<<<<<< HEAD
- #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~    
-def read_conf_fn():
-	cfg_struct = []
-	parser = SafeConfigParser()
-	parser.read('builtin_params.ini')
-	portno = parser.get('general', 'port')
-	gen_user = parser.get('general', 'general_user')
-	gen_pwd = parser.get('general', 'general_pwd')
-	
-	#~ chk if exists
-	cst_parser = SafeConfigParser()
-	cst_parser.read('custom_params.ini')
-	try:
-		numserver = cst_parser.get('general', 'numserver')	
-		#~ custom	 NAB
-		for i in xrange(int(numserver)):
-			d1 = {'url': cst_parser.get('search_provider%d' % (i+1)  , 'url'),
-				  'shortName': cst_parser.get('search_provider%d' % (i+1)  , 'shortName'),
 		#~ builtin search
 		counter2 = 1
 		for i in xrange(MAX_PROVIDER_NUMBER):
@@ -541,6 +523,7 @@ def read_conf_fn():
 				cffileb.append(tmpcfg)
 				count = count + 1
 				
+
 		count = 0
 		for i in xrange(len(cffile)):
 			if(cffile[i]['builtin'] == 0):
@@ -606,6 +589,7 @@ def read_conf_fn():
 		if(genopt['general_ipaddress'] != ''):
 			genopt['general_ipaddress_verbose'] = genopt['general_ipaddress']
 
+
 		openshift_install = False
 		if(len(self.dirconf)):
 			openshift_install = True
@@ -630,4 +614,6 @@ def read_conf_fn():
 		self.refresh()
 		webbuf_body_bi = self.html_editpage()		
 		return webbuf_body_bi
-	
+		
+
+

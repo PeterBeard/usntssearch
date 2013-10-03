@@ -96,8 +96,7 @@ def loadSearchModules(moduleDir = None):
 		try:
 			loadedModules.append(targetClass())
 		except Exception as e:
-			log.error('Failed to instantiate search module ' + module + ': ' + str(e))
-	log.info('Module loading complete.')
+			print 'Error instantiating search module ' + module + ': ' + str(e)
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 	
@@ -110,12 +109,9 @@ def performSearch(queryString,  cfg, dsearch=None, extraparam=None):
 	
 	# Perform the search using every module
 	global globalResults
-	# Load the modules if it hasn't already been done
 	if 'loadedModules' not in globals():
 		loadSearchModules()
-	# Iterate over all of the modules and start a thread for each one to perform its search
-	print 'Trying to start ' + str(len(cfg)) + ' search threads.'
-	globalResults = SearchResults()
+	globalResults = []
 	threadHandles = []
 	lock = threading.Lock()
 
@@ -164,9 +160,6 @@ def performSearch(queryString,  cfg, dsearch=None, extraparam=None):
 					except Exception as e:
 						print 'Error starting deepsearch thread  : ' + str(e)
 
-			except Exception as e:
-				log.error('Error starting thread for search module ' + module + ': ' + str(e))
-	# Wait for all the threads to finish
 	for t in threadHandles:
 		t.join()
 
@@ -249,17 +242,17 @@ class SearchModule(object):
 	# Set up class variables
 	def __init__(self):
 		self.name = 'Unnamed'
-		self.shortName = 'UNA'
 		self.queryURL = ''
 		self.baseURL = ''
 		self.nzbDownloadBaseURL = ''
 		self.apiKey = ''
+
 	# Show the configuration options for this module
 	def configurationHTML(self):
 		return ''
 
 	# Perform a search using the given query string
-	def search(self, queryString, cfg):
+	def search(self, queryString):
 		raise NotImplementedException('This scraper does not have a search function.')
 
 

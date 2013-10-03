@@ -1,4 +1,4 @@
-# # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #	
+# # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #    
 #~ This file is part of NZBmegasearch by pillone.
 #~ 
 #~ NZBmegasearch is free software: you can redistribute it and/or modify
@@ -15,7 +15,6 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
 
-import logging
 import requests
 import sys
 import base64
@@ -161,6 +160,7 @@ class DownloadedStats:
 			stat_info_curated = sorted(stat_info_curated, key=itemgetter('median'))
 		return render_template('stats_gen.html',stat_cur=stat_info_curated)
 
+
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 		
 class ChkVersion:
@@ -243,4 +243,3 @@ class ChkVersion:
 			print mssg
 			log.critical(mssg)
 			return -1
-

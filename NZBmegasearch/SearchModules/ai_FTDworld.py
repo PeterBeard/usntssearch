@@ -14,12 +14,8 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
-import logging
-
 from SearchModule import *
 import time
-
-log = logging.getLogger(__name__)
 
 # Search on NZBx.co
 class ai_FTDworld(SearchModule):
@@ -27,7 +23,7 @@ class ai_FTDworld(SearchModule):
 	def __init__(self):
 		super(ai_FTDworld, self).__init__()
 		self.name = 'FTDworld.net'
-		self.shortName = 'FTD'
+		self.typesrch = 'FTD'
 		self.queryURL = 'http://ftdworld.net/api/index.php'
 		self.baseURL = 'http://ftdworld.net'
 		self.nzbdetailsBaseURL = 'http://ftdworld.net/spotinfo.php?id='
@@ -55,8 +51,8 @@ class ai_FTDworld(SearchModule):
 			self.cookie = {'FTDWSESSID' : http_result.cookies['FTDWSESSID']}
 			return data['goodToGo']
 		except Exception as e:
-			log.info('Unable to login to server: ' + str(e))
-			return False
+			print e
+			return False			
 		
 	# Perform a search using the given query string
 	def search(self, queryString, cfg):
@@ -66,10 +62,6 @@ class ai_FTDworld(SearchModule):
 			ctitle=queryString
 		)
 		
-<<<<<<< HEAD:NZBmegasearch/SearchModules/ae_FTDworld.py
-		results = SearchResults()
-		
-		try:
 		timestamp_s = time.time()	
 		try:
 			http_result = requests.get(url=self.queryURL, params=urlParams, verify=False, timeout=cfg['timeout'])

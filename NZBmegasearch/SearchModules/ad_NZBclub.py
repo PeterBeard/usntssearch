@@ -14,15 +14,10 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
-import logging
-import xml.etree.cElementTree as ET
-
 import ConfigParser
 from SearchModule import *
 import urllib
 import time
-
-log = logging.getLogger(__name__)
 
 # Search on Newznab
 class ad_NZBclub(SearchModule):
@@ -63,8 +58,7 @@ class ad_NZBclub(SearchModule):
 		
 	# Perform a search using the given query string
 	def search(self, queryString, cfg):		
-		urlParams = dict(
-			q=queryString,
+		urlParams = dict(q =queryString,
             ig= 1,
             rpp= 200,
             st= 5,
@@ -105,8 +99,8 @@ class ad_NZBclub(SearchModule):
 		try:
 			tree = ET.fromstring(data.encode('utf-8'))
 		except Exception as e:
-			log.error('Failed to parse data from server: ' + str(e))
-			return results
+			print e
+			return parsed_data
 
 		#~ successful parsing
 		for elem in tree.iter('item'):
@@ -170,4 +164,3 @@ class ad_NZBclub(SearchModule):
 				print mssg
 				log.error (mssg)
 		return parsed_data		
-

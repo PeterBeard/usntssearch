@@ -14,17 +14,8 @@
 #~ You should have received a copy of the GNU General Public License
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #
-import logging
-
 from SearchModule import *
 import time
-
-try:
-	from BeautifulSoup import BeautifulSoup
-except Exception:
-	from bs4 import BeautifulSoup # BeautifulSoup 4
-
-log = logging.getLogger(__name__)
 
 # Search on NZB.cc
 class ac_NZBcc(SearchModule):
@@ -32,7 +23,7 @@ class ac_NZBcc(SearchModule):
 	def __init__(self):
 		super(ac_NZBcc, self).__init__()
 		self.name = 'NZB.cc'
-		self.shortName = 'NZB'
+		self.typesrch = 'NZB'
 		self.queryURL = 'https://nzb.cc/q.php'
 		self.baseURL = 'https://nzb.cc'
 		self.nzbDownloadBaseURL = 'http://nzb.cc/nzb.php?c='
@@ -98,6 +89,7 @@ class ac_NZBcc(SearchModule):
 		cstart = data.find("[", cstart, cend)+1
 
 		#~ parse all members and put in parsed data
+		parsed_data = []
 		inc=1
 		
 		while True:
@@ -138,10 +130,10 @@ class ac_NZBcc(SearchModule):
 
 			#~ absolute day of posting
 			intage = int(age[0:age.find(' ')])
-			today = time.time()
-			#dd = datetime.timedelta(days=intage)
-			#earlier = today - dd
-			posting_date_timestamp = today - intage*3600*24#time.mktime(earlier.timetuple())
+			today = datetime.datetime.now()
+			dd = datetime.timedelta(days=intage)
+			earlier = today - dd
+			posting_date_timestamp = time.mktime(earlier.timetuple())
 			#~ print posting_date_timestamp 
 
 			#~ convert for total nzb url
@@ -163,6 +155,9 @@ class ac_NZBcc(SearchModule):
 					'providertitle':self.name
 					}
 			
-			results.append(r)
+			parsed_data.append(d1)
+			#~ print d1["url"]
+			#~ inc = inc +1 
+			#~ print "=======" +str(inc)
 
-		return results
+		return parsed_data
