@@ -88,7 +88,6 @@ class Auth:
 			self.cfgsets.refresh()
 			if(len(self.cfgsets.cgen['general_usr']) != 0):
 				auth = request.authorization
-				print auth
 				if not auth or not self.check_auth(auth.username, auth.password,0):
 					sret = self.authenticate()
 					return sret
