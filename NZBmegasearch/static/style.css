@@ -148,6 +148,38 @@ div#container
 *     Form Styles     *
 **********************/
 
+/* Config form */
+
+#config-form {
+	text-align: left;
+}
+
+#config-form fieldset + fieldset {
+	margin: 20px 0;
+}
+#config-form fieldset legend {
+	border-bottom: 3px solid #075b66;
+	color: #075b66;
+	font-size: 2em;
+	font-weight: bold;
+	line-height: 1.3em;
+	margin-bottom: 10px;
+}
+#config-form fieldset h1 {
+	font-size: 1.3em;
+	margin-top: 15px;
+}
+#config-form fieldset fieldset + fieldset {
+	margin: 10px 0;
+}
+#config-form fieldset fieldset legend {
+	border: none;
+	color: inherit;
+	font-size: 1em;
+	margin-bottom: 0;
+}
+/* Search form */
+
 #search-form {
 	margin: 0 auto;
 	width: 900px;
@@ -253,14 +285,16 @@ div#container
 	color: #fff;
 }
 
-/* Results Table Styles */
+/* Table Styles */
+table {
+	width: 100%;
+}
 .results
 {
 	border-collapse: collapse;
 	color: #075b66;
 	margin: 30px 0;
 	text-align: left;
-	width: 100%;
 }
 .results th
 {
@@ -316,15 +350,21 @@ div#container
 	min-width: 100px;
 	text-align: center;	
 }
-
-
-
 .searchkind {
 	background-color: #ffffff;
 	text-align: center;
-	/*width: 210px;*/
 	color: #378b96;
 	vertical-align: middle;
+}
+
+.tabular-form td, .tabular-form th {
+	padding: 4px 7px;
+}
+.tabular-form tbody tr {
+	border-bottom: 1px solid #ccc;
+}
+.tabular-form input[type=text], .tabular-form input[type=password], .tabular-form select {
+	width: 100%;
 }
 
 /* Alert Styles */
