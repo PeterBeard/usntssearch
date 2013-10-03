@@ -3,210 +3,18 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>NZB MegasearcH</title>
+
 		<link rel="stylesheet" type="text/css" href="static/reset2.css" />
 		<link rel="stylesheet" type="text/css" href="static/style.css" />
-		<link rel="stylesheet" href="static/toggle-switch.css">
+		<link rel="stylesheet" type="text/css" href="static/toggle-switch.css" />
+
 		<script type="text/javascript" src="static/jquery.min.js"></script>
 		<script type="text/javascript" src="static/block-ui.js"></script>
-
 		<script type=text/javascript>
 		  var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 		</script>
-
 	</head>
 	<body>
-		<div id="container">
-			<div class="alert-info-silent">
-			{{ motd|safe  }}
-			</div>
-
-			<div  class="titlemain"><img src="static/title.png" width="387" height="" alt="NZBmegasearcH"/></div>
-			<form action="/s" method="get" class="form-wrapper-01">
-			<table><tr>
-					<td>
-						<label for="search" class="visuallyhidden">Search</label>
-						<input type="text" id="search" placeholder="" name="q" value="{{ sstring }}">
-						<span>
-						<label for="selcat" class="visuallyhidden">Category</label>
-						<select class="selcatstlye" name="selcat" id="selcat">
-							<option value="" selected>No categ.</option>
-							{% for sopt in selectable_opt -%}
-								<option value={{ sopt[0] }} {{ sopt[2] }}>{{ sopt[1] }}</option>
-							{%- endfor %}
-						</select>
-						</span>
-						<table><tr><td class='searchkind'>number of indices:</td>
-							<td>
-							<span class="switch switch-two candy blue">
-							{% for srchopt in search_opt -%}
-								<input id="search_option{{ srchopt[1] }}" name="tm" type="radio" value="{{ srchopt[1] }}" {{ srchopt[2] }}>
-								<label for="search_option{{ srchopt[1] }}" onclick="">{{ srchopt[0] }}</label>
-
-							{%- endfor %}
-							<span class="slide-button"></span>
-							</span>
-							</td></tr></table>
-					</td>
-					<td style='width: 42px;'>
-						<input type="submit" value="Go" id="submit">
-					</td>
-					</tr>
-			</table>
-			</form>
-
-			<div class ="suggarea_macro">
-
-					{% if   trend_movie -%}
-					<table class ="trend_table">
-						<tr>	<TH COLSPAN="2" style="text-align: right;">
-						  <div class='alert-flex'> Movies Trending</div>
-						</TH></tr>
-						{% for tm in trend_movie -%}
-							<tr>
-							<td  class ="suggarea_title"> <a href="s?q={{ tm['searchstr'] }}" class='sugglinx'> {{ tm['prettytxt'] }} </a></td>
-							<td class ="suggarea_imbd"> <a href="{{ tm['imdb_url'] }}" > <img src="static/imdb.png" width="16" height="16" alt="IMDb" /> </a> </td>
-							</tr>
-						{%- endfor %}
-					</table>
-					{%- endif %}
-
-					{% if trend_show -%}
-					<table class ="trend_table"  >
-						<tr>	<TH COLSPAN="2" style="text-align: right;">
-						<div class='alert-flex'> Shows Trending</div>
-						</TH></tr>
-						{% for ts in trend_show -%}
-							<tr>
-							<td  class ="suggarea_title"> <a href="s?q={{ ts['searchstr'] }}" class='sugglinx'> {{ ts['prettytxt'] }} </a></td>
-							<td class ="suggarea_imbd"> <a href="{{ ts['imdb_url'] }}"> <img src="static/tvdb.gif" width="16" height="16" alt="tvdb" /> </a> </td>
-							</tr>
-						{%- endfor %}
-					</table>
-					{%- endif %}
-
-					{%  if   sugg -%}
-					<table class ="suggarea_table"  >
-						<tr>	<TH COLSPAN="2" style="text-align: right;">
-						<div class='alert-red'>Did you mean ... </div>
-						</TH></tr>
-						{% for sl in sugg -%}
-							<tr>
-							<td  class ="suggarea_title"> <a href="s?q={{ sl['searchstr'] }}"  style="color:#ff0000;" class='sugglinx'> {{ sl['prettytxt'] }} </a></td>
-							<td class ="suggarea_imbd"> <a href="{{ sl['imdb_url'] }}"> <img src="static/imdb.png" width="16" height="16" alt="IMDb" /> </a> </td>
-							</tr>
-						{%- endfor %}
-					</table>
-					{%- endif %}
-
-
-				</td>
-
-			</table>
-			{% if results -%}
-			<table class="results" summary="Search Results">
-				<thead>
-					<tr><th scope="col" class=titlecell><a href="s?q={{ args['q'] }}&order=t&tm={{ speed_class_sel }}&selcat={{ scat }}"><b>Title <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
-					    <th scope="col" class=sizecell><a href="s?q={{ args['q'] }}&order=c&tm={{ speed_class_sel }}&selcat={{ scat }}"><b>Type <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
-					    <th scope="col" class=sizecell><a href="s?q={{ args['q'] }}&order=s&tm={{ speed_class_sel }}&selcat={{ scat }}"><b>Size <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
-					    <th scope="col" class=datecell><a href="s?q={{ args['q'] }}&order=d&tm={{ speed_class_sel }}&selcat={{ scat }}"><b>Days <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
-					    <th scope="col" class=providercell><a href="s?q={{ args['q'] }}&order=p&tm={{ speed_class_sel }}&selcat={{ scat }}"><b>Comments <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
-					</tr>
-				</thead>
-				<tbody>
-				{% for row in results -%}
-					{% if row['ignore'] == 0  -%}
-					<tr>
-
-						<td class="titlecell">
-							{% if send2sab_exist   -%}
-								<a href= "" id=tosab_lnk name=tosab_info{{ row['id'] }}>
-								<input type="hidden" value="{{ row['url_encr'] }}" name=tosab_info{{ row['id'] }}>
-								<img src="static/sab2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tosab_info{{ row['id'] }}_img></a>
-							{%- endif %}
-  
-							{% if send2nzbget_exist   -%}
-								<a href= "" id=tonzbget_lnk name=tonzbget_info{{ row['id'] }}>
-								<input type="hidden" value="{{ row['url_encr'] }}" name=tonzbget_info{{ row['id'] }}>
-								<img src="static/nzb2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tonzbget_info{{ row['id'] }}_img></a>
-							{%- endif %}
-							
-							<a href= "{{ row['url_encr'] }}">{{ row['title'] }}</a>
-
-							{% if row['predb'] == 2 -%}
-							<span class = "predbcell">
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="16" height="16" class="imgdisplayed"/></a>
-							</span>	
-							{%- endif %}
-							{% if row['predb'] == 1 -%}
-							<span class = "predbcell">
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="16" height="16" class="imgdisplayed"/></a>
-							</span>	
-							{%- endif %}</td>
-
-						<td class="sizecell">{{ row['cat'] }}</td>
-						<td class="sizecell">{{ row['filesize'] }}</td>
-						<td class="datecell">{{ row['age'] }}</td>
-						<td class="providercell"> <a href= "{{ row['details_deref'] }}">{{ row['providertitle'] }}</a></td>
-					</tr>
-					{%- endif %}
-				{%- endfor %}
-				</tbody>
-			</table>
-			{% elif sstring -%}
-			<p>No results found.</p>
-			{%- endif %}
-
-
-			{% if exist -%}
-			<table class="results" summary="Detected duplicates">
-				<thead>
-					<tr><th scope="col" class=titlecell><b>Detected duplicates</b></th>
-					    <th scope="col" class=sizecell><b>Type</b></th>
-						<th scope="col" class=sizecell><b>Size</b></th>
-						<th scope="col" class=datecell><b>Days</b></th>
-						<th scope="col" class=providercell><b>Comments</b></th></tr>
-				</thead>
-				<tbody>
-				{% for row in results -%}
-					{% if row['ignore'] == 1  -%}
-					<tr>
-						<td class="titlecell">
-							{% if send2sab_exist   -%}
-								<a href= "" id=tosab_lnk name=tosab_infol{{ row['id'] }}>
-								<input type="hidden" value="{{ row['url_encr'] }}" name=tosab_info{{ row['id'] }}>
-								<img src="static/sab2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tosab_info{{ row['id'] }}_img>
-							{%- endif %}
-
-							{% if send2nzbget_exist   -%}
-								<a href= "" id=tonzbget_lnk name=tonzbget_info{{ row['id'] }}>
-								<input type="hidden" value="{{ row['url_encr'] }}" name=tonzbget_info{{ row['id'] }}>
-								<img src="static/nzb2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tonzbget_info{{ row['id'] }}_img></a>
-							{%- endif %}
-							
-							<a href= "{{ row['url_encr'] }}">{{ row['title'] }}</a>
-
-							{% if row['predb'] == 2 -%}
-							<span class = "predbcell">							
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="16" height="16" class="imgdisplayed"/></a>
-							{%- endif %}
-							{% if row['predb'] == 1 -%}
-							<span class = "predbcell">
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="16" height="16" class="imgdisplayed"/></a>
-							</span>									
-							{%- endif %}</td>
-
-						<td class="sizecell">{{ row['cat'] }}</td>
-						<td class="sizecell">{{ row['filesize'] }}</td>
-						<td class="datecell">{{ row['age'] }}</td>
-						<td class="providercell"> <a href= "{{ row['details_deref'] }}">{{ row['providertitle'] }}</a></td>
-					</tr>
-					{%- endif %}
-				{%- endfor %}
-				</tbody>
-			</table>
-			{%- endif %}
-
-		</div>
 		{% if large_server  == False -%}
 			<div class="topright_tight">
 				{% if vr['chk']  == 1 and vr['os']  == 'linux' -%}
@@ -227,12 +35,12 @@
 					</a> ]
 				{%- endif %}
 
-				[ <a href= "connect"><img src="static/sick_logo.png" width="" height="16" style='vertical-align: bottom;' alt="connect" /><img src="static/cp_logo.png" width="" height="16" alt=""/></a> ]
-				[ <a href='config'><img src="static/options.png" width="" height="16" style='vertical-align: bottom;' alt="config" /></a> ]
+				[ <a href="connect"><img src="static/sick_logo.png" width="" height="16" alt="connect" title="Sickbeard" /><img src="static/cp_logo.png" width="" height="16" alt="" title="CouchPotato" /></a> ]
+				[ <a href="config"><img src="static/options.png" width="" height="16" alt="config" title="Configure" /></a> ]
 				[ {% if vr['os']  != 'openshift' -%}
-						<a href='restart?sid={{ sid }}' OnClick="return confirm('Do you really want to restart the program?');" class='restartbutton'><img src="static/restart.png" width="" height="16" style='vertical-align: bottom;' alt="restart"/></a>
+						<a href='restart?sid={{ sid }}' OnClick="return confirm('Do you really want to restart the program?');" class='restartbutton'><img src="static/restart.png" width="" height="16" alt="restart" title="Restart" /></a>
 				  {%- endif %}
-				 <a href='poweroff?sid={{ sid }}' OnClick="return confirm('Do you really want to halt the program?');"><img src="static/off.png" width="" height="16" style='vertical-align: bottom;' alt="power off"/></a> ]
+				 <a href='poweroff?sid={{ sid }}' OnClick="return confirm('Do you really want to halt the program?');"><img src="static/off.png" width="" height="16" alt="power off" title="Shutdown" /></a> ]
 				</div>
 			</div>
 		{%- endif %}
@@ -241,9 +49,184 @@
 			<div class="topright_tight">
 				[ <a href='https://github.com/pillone/usntssearch'> Get NZBMegasearch Github</a>]
 				[ <a href='legal'>DMCA</a>]
-				[ <a href= "connect"><img src="static/sick_logo.png" width="" height="16" style='vertical-align: bottom;' /><img src="static/cp_logo.png" width="" height="16" /></a> ]
+				[ <a href= "connect"><img src="static/sick_logo.png" width="" height="16" /><img src="static/cp_logo.png" width="" height="16" /></a> ]
 			</div>
 		{%- endif %}
+		<div id="container">
+			<div class="alert silent">
+			{{ motd|safe  }}
+			</div>
+
+			<div class="titlemain"><img src="static/title.png" width="387" height="" alt="NZBmegasearcH"/></div>
+			<form action="/s" method="get" id="search-form">
+				<div id="search-terms">
+					<label for="search" class="visuallyhidden">search</label>
+					<input type="text" id="search" placeholder="" name="q" value="{{ sstring }}">
+					<input type="submit" value="go">
+					<p><a href="#" onClick="$('#advanced-options').slideToggle()">advanced options</a></p>
+				</div>
+				<fieldset id="advanced-options">
+					<label for="selcat" class="visuallyhidden">category</label>
+					<select name="selcat" id="selcat">
+						<option value="" selected>No Category</option>
+						{% for sopt in selectable_opt -%}
+							<option value={{ sopt[0] }} {{ sopt[2] }}>{{ sopt[1] }}</option>
+						{%- endfor %}
+					</select>
+					<p>number of indices&nbsp;<span class="switch switch-two eight-bit">
+						{% for srchopt in search_opt -%}
+							<input id="search_option{{ srchopt[1] }}" name="tm" type="radio" value="{{ srchopt[1] }}" {{ srchopt[2] }}>
+							<label for="search_option{{ srchopt[1] }}" onclick="">{{ srchopt[0] }}</label>
+						{%- endfor %}
+						<span class="slide-button"></span>
+					</span></p>
+				</fieldset>
+			</form>
+			{% if trend_movie or trend_show or sugg -%}
+			<div id="suggestions">
+				{%if trend_movie -%}
+				<div>
+					<h1>Movies Trending</h1>
+					<ul>
+						{% for tm in trend_movie -%}
+						<li><a href="s?q={{ tm['searchstr'] }}">{{ tm['prettytxt'] }}</a> <a href="{{ tm['imdb_url'] }}"><img src="static/imdb.png" width="16" height="16" alt="IMDb" /></a></li>
+						{%- endfor %}
+					</ul>
+				</div>
+				{%- endif %}
+				{% if trend_show -%}
+				<div>
+					<h1>Shows Trending</h1>
+					<ul>
+						{% for ts in trend_show -%}
+						<li><a href="s?q={{ ts['searchstr'] }}">{{ ts['prettytxt'] }}</a> <a href="{{ ts['imdb_url'] }}"><img src="static/tvdb.gif" width="16" height="16" alt="tvdb" /></a></li>
+						{%- endfor %}
+					</ul>
+				</div>
+				{%- endif %}
+				{% if sugg -%}
+				<div>
+					<h1>Did you mean&hellip;</h1>
+					<ul>
+						{% for sl in sugg -%}
+						<li><a href="s?q={{ sl['searchstr'] }}">{{ sl['prettytxt'] }}</a> <a href="{{ sl['imdb_url'] }}"><img src="static/imdb.png" width="16" height="16" alt="IMDb" /></a></li>
+						{%- endfor %}
+					</ul>
+				</div>
+				{%- endif %}
+			</div>
+			<br style="clear:both;" />
+			{%- endif %}
+			{% if results -%}
+			<table class="results" summary="Search Results">
+				<thead>
+					<tr>
+						<th scope="col" class="titlecell"><a href="s?q={{ args['q'] }}&order=t&tm={{ speed_class_sel }}&selcat={{ scat }}">Title <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></a></th>
+					    <th scope="col" class="sizecell"><a href="s?q={{ args['q'] }}&order=c&tm={{ speed_class_sel }}&selcat={{ scat }}">Type <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></a></th>
+					    <th scope="col" class="sizecell"><a href="s?q={{ args['q'] }}&order=s&tm={{ speed_class_sel }}&selcat={{ scat }}">Size <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></a></th>
+					    <th scope="col" class="datecell"><a href="s?q={{ args['q'] }}&order=d&tm={{ speed_class_sel }}&selcat={{ scat }}">Days <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></a></th>
+					    <th scope="col" class="providercell"><a href="s?q={{ args['q'] }}&order=p&tm={{ speed_class_sel }}&selcat={{ scat }}">Comments <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></a></th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for row in results -%}
+					{% if row['ignore'] == 0  -%}
+					<tr>
+
+						<td class="titlecell">
+							{% if send2sab_exist   -%}
+								<a href="#" id=tosab_lnk name=tosab_info{{ row['id'] }}>
+								<input type="hidden" value="{{ row['url_encr'] }}" name=tosab_info{{ row['id'] }}>
+								<img src="static/sab2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tosab_info{{ row['id'] }}_img></a>
+							{%- endif %}
+  
+							{% if send2nzbget_exist   -%}
+								<a href="#" id=tonzbget_lnk name=tonzbget_info{{ row['id'] }}>
+								<input type="hidden" value="{{ row['url_encr'] }}" name=tonzbget_info{{ row['id'] }}>
+								<img src="static/nzb2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tonzbget_info{{ row['id'] }}_img></a>
+							{%- endif %}
+							
+							<a href= "{{ row['url_encr'] }}">{{ row['title'] }}</a>
+
+							{% if row['predb'] == 2 -%}
+							<span class = "predbcell">
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="16" height="16" class="imgdisplayed"/></a>
+							</span>	
+							{%- endif %}
+							{% if row['predb'] == 1 -%}
+							<span class = "predbcell">
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="16" height="16" class="imgdisplayed"/></a>
+							</span>	
+							{%- endif %}
+						</td>
+
+						<td class="sizecell">{{ row['cat'] }}</td>
+						<td class="sizecell">{{ row['filesize'] }}</td>
+						<td class="datecell">{{ row['age'] }}</td>
+						<td class="providercell"> <a href= "{{ row['details_deref'] }}">{{ row['providertitle'] }}</a></td>
+					</tr>
+					{%- endif %}
+				{%- endfor %}
+				</tbody>
+			</table>
+			{% elif sstring -%}
+			<p>No results found.</p>
+			{%- endif %}
+
+
+			{% if exist -%}
+			<table class="results" summary="Detected duplicates">
+				<thead>
+					<tr>
+						<th scope="col" class="titlecell">Detected duplicates</th>
+					    <th scope="col" class="sizecell">Type</th>
+						<th scope="col" class="sizecell">Size</th>
+						<th scope="col" class="datecell">Days</th>
+						<th scope="col" class="providercell">Comments</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for row in results -%}
+					{% if row['ignore'] == 1  -%}
+					<tr>
+						<td class="titlecell">
+							{% if send2sab_exist   -%}
+								<a href="#" id=tosab_lnk name=tosab_infol{{ row['id'] }}>
+								<input type="hidden" value="{{ row['url_encr'] }}" name=tosab_info{{ row['id'] }}>
+								<img src="static/sab2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tosab_info{{ row['id'] }}_img>
+							{%- endif %}
+
+							{% if send2nzbget_exist   -%}
+								<a href= "#" id=tonzbget_lnk name=tonzbget_info{{ row['id'] }}>
+								<input type="hidden" value="{{ row['url_encr'] }}" name=tonzbget_info{{ row['id'] }}>
+								<img src="static/nzb2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tonzbget_info{{ row['id'] }}_img></a>
+							{%- endif %}
+							
+							<a href= "{{ row['url_encr'] }}">{{ row['title'] }}</a>
+
+							{% if row['predb'] == 2 -%}
+							<span class = "predbcell">							
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="16" height="16" class="imgdisplayed"/></a>
+							{%- endif %}
+							{% if row['predb'] == 1 -%}
+							<span class = "predbcell">
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="16" height="16" class="imgdisplayed"/></a>
+							</span>									
+							{%- endif %}
+						</td>
+
+						<td class="sizecell">{{ row['cat'] }}</td>
+						<td class="sizecell">{{ row['filesize'] }}</td>
+						<td class="datecell">{{ row['age'] }}</td>
+						<td class="providercell"> <a href= "{{ row['details_deref'] }}">{{ row['providertitle'] }}</a></td>
+					</tr>
+					{%- endif %}
+				{%- endfor %}
+				</tbody>
+			</table>
+			{%- endif %}
+
+		</div>
 
 		<div class="bottomcenter">ver. {{ vr['curver'] }} -- # {{ nc  }} -- 0byte
 					{% if vr['os']  == 'openshift' -%}
@@ -252,7 +235,6 @@
 		</div>
 
 	    <script type="text/javascript">
-
 	    $(document).ready(function() {
 
  			$("a#tosab_lnk").click(function () {
@@ -326,6 +308,6 @@
 			$.unblockUI();
 	     });
 		</script>
-
 	</body>
 </html>
+

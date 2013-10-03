@@ -1,12 +1,7 @@
-/* Reset styles */
-/*
-@import url(reset.css);
-*/
-
 /* Typography */
 body
 {
-	line-height: 1.6em;
+	font: 16px/26px Helvetica, Arial, sans-serif;
 }
 h1,h2,h3,h4 {
 	font-size: 2em;
@@ -23,25 +18,14 @@ h4 {
 	font-size: 1.1em;
 }
 
-a {
-	color: #039;
+/* Link Styles */
+a:link, a:active, a:visited, a:hover {
+	color: #075b66;
     text-decoration: underline;
 }
-
-
-.selcatstlye{
-	border: 1px solid #ccc;
-	height: 40px;
-	padding: 0px;
-
-	font: 16px Helvetica, Arial, Sans-Serif;
-	background:#fff;
-
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	border-radius: 3px;
-	color: #378b96
-
+a:hover {
+	color: #378b96;
+	text-decoration: none;
 }
 
 /* Container Div */
@@ -50,15 +34,15 @@ div#container
 	margin: 0 auto;
 	max-width: 1400px;
 	min-width: 960px;
-	width: 100%;
 }
 /* ------------------
  styling for the tables
    ------------------   */
  /*this is what we want the div to look like*/
-.topright{
+.topright {
     display:block;
-	font: bold 12px Helvetica, Arial, Sans-Serif;;
+	font-size: 0.75em;
+	font-weight: bold;
 
     /*set the div in the top right corner*/
     position:absolute;
@@ -76,14 +60,14 @@ div#container
 
 .message{
    display:block;
-	font: 14px Helvetica, Arial, Sans-Serif;;
+	font-size:0.875em;
     position:absolute;
 	color: #039;
 
 }
 
 .bottomcenter{
-	font: 8px Helvetica, Arial, Sans-Serif;;
+	font-size: 0.6em;
 	text-align: center;
 	color: #039;
 	width: 450px;
@@ -91,7 +75,7 @@ div#container
 }
 
 .providerlist{
-	font: 12px Helvetica, Arial, Sans-Serif;;
+	font-size:0.75em;
 	text-align: center;
 	color: #039;
 	width: 450px;
@@ -99,7 +83,8 @@ div#container
 }
 .topright_tight{
     display:block;
-	font: bold 12px Helvetica, Arial, Sans-Serif;;
+	font-size:0.75em;
+	font-weight: bold;
 
     /*set the div in the top right corner*/
     position:absolute;
@@ -107,18 +92,19 @@ div#container
     right:0;
     width:290px;
 }
-
+.topright_tight img {
+	vertical-align: -4px;
+}
 .headers_singleparagraph{
-	font-size: 28px;
+	font-size: 1.75em;
 	margin: 45px auto;
-	font-family:bold  Helvetica, Arial, Sans-Serif;
+	font-weight: bold;
 	color: #039;
 }
 
 
 .singleparagraph{
-	font-size: 14px;
-	font-family: Helvetica, Arial, Sans-Serif;
+	font-size: 0.875em;
 	color: #039;
     margin: 45px 160px;
 	width: 60%;
@@ -133,204 +119,201 @@ div#container
 }
 
 
-.suggarea_macro {
-	font-family: Helvetica, Arial, Sans-Serif;
-	font-size: 14px;
-	margin: 20px auto;
-/*
-	border:1px solid black;
-	text-align: right;
-*/
+/* Suggestion Areas */
+#suggestions {
+	font-size: 0.875em;
+	margin: 10px auto 0;
+	width: 900px;
 }
-
-.trend_table {
-	font-family: Helvetica, Arial, Sans-Serif;
-	font-size: 14px;
-	text-align: right;
-	vertical-align: top;
-	display: inline-table;
-	margin-left: 20px;
-	}
-
-
-.suggarea_table {
-	font-family: Helvetica, Arial, Sans-Serif;
-	font-size: 14px;
-	text-align: right;
-	display: inline-table;
-	margin-left: 20px;
-	}
-
-.suggarea_title {
-	word-break:break-all;
-/*
-	width: 95%;
-*/
+#suggestions h1 {
+	background: #378b96 none;
+	border: 3px solid #333;
+	color: #fff;
+	margin: 0 5px 3px;
+	padding: 2px 6px;
+	text-align: center;
+	font: 1.2em/1.5em Courier, monospace;
+	font-weight: bold;
 }
-
-.suggarea_imbd {
- padding-left: 5px; 
- }
-
-.form-wrapper-01 {
-	width: 505px;
-	margin: 5px auto;
-	padding: 5px;
-	overflow: hidden;
-	border-width: 0px;
-	border-style: solid;
-	border-color: #dedede #bababa #aaa #bababa;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
-	border-radius: 5px;
-}
-
-/*
- text search box #378b96
-*/
-.form-wrapper-01 #search {
-	width: 320px;
-	height: 18px;
-	padding: 10px 5px;
+#suggestions div {
 	float: left;
-	font: 16px Helvetica, Arial, Sans-Serif;
-	border: 1px solid #ccc;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	border-radius: 3px;
-
-	color: #378b96
-
+	width: 300px;
+	text-align: right;
+}
+#suggestions ul {
+	padding: 2px 6px;
 }
 
+/**********************
+*     Form Styles     *
+**********************/
 
-.form-wrapper-01 #search:focus {
-	outline: 0;
-	border-color: #aaa;
-/*
-	-moz-box-shadow: 0 1px 1px #bbb inset;
-	-webkit-box-shadow: 0 1px 1px #bbb inset;
-	box-shadow: 0 1px 1px #bbb inset;
-*/
+#search-form {
+	margin: 0 auto;
+	width: 900px;
 }
 
-.form-wrapper-01 #search::-webkit-input-placeholder {
-	color: #999;
-	font-weight: normal;
-	font: 16px Helvetica, Arial, Sans-Serif;
-	font-style:italic;
-	color: #378b96
+/* Main Search Area */
+#search-terms {
+	background: #378b96 none;
+	border: 5px solid #333;
+	color: #fff;
+	font: 1.5em/1em Courier, monospace;
+	font-weight: bold;
+	padding: 15px 5px;
 }
 
-.form-wrapper-01 #search:-moz-placeholder {
-	color: #999;
-	font-weight: normal;
-	font-size:14px;
-	font-style:italic;
+#search-terms input {
+	font: inherit;
 }
 
-.form-wrapper-01 #search:-ms-input-placeholder {
-	color: #999;
-	font-weight: normal;
-	font-size:14px;
-	font-style:italic;
+#search-terms input[type=text] {
+	border: 5px solid #075b66;
+	margin: 0;
+	padding: 9px;
+	width: 745px;
 }
 
-/*
- button
-*/
-.form-wrapper-01 #submit {
-	float: right;
-	border: 1px solid #a2bcc0;
-	height: 75px;
-	width: 40px;
-	padding: 0;
+#search-form input[type=submit] {
+	background: #666 none;
+	border: 5px solid #333;
+	color: #fff;
 	cursor: pointer;
-	font: bold 16px Helvetica, Arial, Sans-Serif;
-	color: #fafafa;
-	text-transform: none;
-	background-color: #a2bcc0;
-
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	border-radius: 3px;
+	margin: 0;
+	padding: 7px;
+	width: 70px;
+}
+#search-form input[type=submit]:active {
+	background: #333 none;
+	border-color: #666;
+	position: relative;
+	top: 2px;
+	left: 2px;
 }
 
-.form-wrapper-01 #submit:hover,
-.form-wrapper-01 #submit:focus {
-	background-color: #31b2c3;
+#search-terms p {
+	font-size: 0.75em;
+	padding-top: 5px;
+}
+#search-terms a {
+	color: inherit;
+	text-decoration: none;
 }
 
-.form-wrapper-01 #submit:active {
-	outline: 0;
+/* Advanced options */
+#advanced-options {
+	background: #075b66 none;
+	border: 5px solid #333;
+	border-top: none;
+	color: #fff;
+	display: none;
+	font-family: Courier, monospace;
+	font-weight: bold;
+	margin: 0 auto;
+	min-height: 20px;
+	overflow: hidden;
+	padding: 15px 0 5px;
+	width: 700px;
+}
+#advanced-options select {
+	margin-bottom: 15px;
+}
+#advanced-options .switch {
+	display: inline-block;
+	vertical-align: middle;
 }
 
-.form-wrapper-01 #submit::-moz-focus-inner {
-	border: 0;
+/* Switch-toggle 8-bit Theme */
+.eight-bit {
+	background: #333 none;
+	border: 5px solid #ccc;
+	color: #666;
+	font-weight: bold;
+	text-align: center;
+	font-family: Courier, monospace;
+	margin: 10px;
+	height: 30px;
+	width: 290px;
 }
 
-#search {
-	width: 230px; /*--- we will change this width on hover effect ---*/
-	height: 20px;
-	padding: 10px 5px;
-	float: right;
-	font:  bold 16px Helvetica, Arial, Sans-Serif;
-	border: 1px solid #ccc;
+.eight-bit input:checked + label {
+	color: #ffffff;
+}
+	
+.eight-bit .slide-button {
+	background-color: #277b86;
+}
+
+.eight-bit p {
+	color: #333;
+	text-shadow: none;
+}
+
+.eight-bit span {
+	color: #fff;
 }
 
 /* Results Table Styles */
 .results
 {
-	font-family: Helvetica, Arial, Sans-Serif;
-	font-size: 12px;
-	background: #fff;
-	margin: 45px;
-	width: 90%;
 	border-collapse: collapse;
+	color: #075b66;
+	margin: 30px 0;
 	text-align: left;
+	width: 100%;
 }
 .results th
 {
-	font-size: 14px;
-	font-weight: normal;
-	color: #039;
+	font-weight: bold;
 	padding: 2px 2px;
-	border-bottom: 2px solid #6678b1;
+	border-bottom: 2px solid #075b66;
+}
+.results tbody tr {
+	color: #666;
+	font-size: 0.8em;
+}
+.results tbody tr:nth-child(2n) {
+	background: #dde3f0 none;
+	color: #444;
+}
+.results tbody tr img {
+	vertical-align: middle;
 }
 .results td
 {
 	border-bottom: 1px solid #ccc;
-	color: #669;
 	padding: 2px 2px;
 }
-.results tbody tr:hover td
+.results tbody tr:hover
 {
-	color: #009;
+	background: #378b96 none;
+	color: #f0f0f0;
 }
-.results tbody tr:hover {
-	background: #f0f0f0 none;
+.results tbody tr:hover a:link, .results tbody tr:hover a:active, .results tbody tr:hover a:visited {
+	color: #fff;
 }
 .titlecell {
-	width: 60%;
+	width: 70%;
 }
 
 .sizecell {
-	width: 10%;
+	width: 7%;
 	text-align: center;
 }
 
 .predbcell {
-	width: 10%;
+	width: 7%;
 	text-align: center;
 }
 
 .datecell {
-	width: 10%;
+	width: 7%;
 	text-align: center;
 }
 
 .providercell {
-	width: 10%;
+	width: 9%;
+	min-width: 100px;
 	text-align: center;	
 }
 
@@ -339,55 +322,37 @@ div#container
 .searchkind {
 	background-color: #ffffff;
 	text-align: center;
-	font: 16px Helvetica, Arial, Sans-Serif;
-	width: 210px;
+	/*width: 210px;*/
 	color: #378b96;
 	vertical-align: middle;
 }
 
+/* Alert Styles */
 
-.alert-info {
-	font: 14px Helvetica, Arial, Sans-Serif;;
-	padding: 8px 35px 8px 14px;
-	color: #ffffff;
-	text-shadow: none;
-	background-color: #a2bcc0;
-	text-align: center;
-	width: 420px;
-	margin: 10px auto;
-	margin-bottom: 18px;
-	overflow: hidden;
-	-moz-border-radius: 10px;
-	-webkit-border-radius: 10px;
+.alert {
+	background: #378b96 none;
 	border-radius: 10px;
-}
-
-
-.alert-info-silent {
-	font: 14px Helvetica, Arial, Sans-Serif;;
-	padding: 8px 35px 8px 14px;
-	width: 420px;
-	margin: 40px auto;
+	color: #fff;
+	font-family: Courier, monospace;
+	font-weight: bold;
 	margin-bottom: 18px;
 	overflow: hidden;
+	padding: 8px 35px 8px 14px;
+	width: 420px;
 }
-
-.alert-flex, .alert-red {
-    width: 150px;
-    font: bold 14px Helvetica, Arial, Sans-Serif;
-    color: #ffffff;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
+.silent {
+	background: inherit;
+	color: inherit;
+}
+.flex {
+	border-radius: 5px;
+	float: right;
+	margin: 0 0 5px;
     padding: 2px 4px 2px 4px;
-    float: right;
-    margin: 0 0 5px;
+	width: 150px;
 }
-.alert-flex {
-    background-color: #a2bcc0;
-}
-.alert-red {
-    background-color: #ff0000;
+.red {
+	background: #f00 none;
 }
 
 .visuallyhidden {
@@ -406,23 +371,25 @@ div#container
 }
 
 .conftbox {
-	font: 12px Helvetica, Arial, Sans-Serif;
+	font-size: 0.75em;
 	border: 1px solid #ccc;
 	color: #000000
 }
 
 .confbttn {
 	background:#fff;
-	font: 12px Helvetica, Arial, Sans-Serif;
+	font-size: 0.75em;
 	border: 2px solid #ccc;
 	color: #000000
 }
 
 .confbttnbig {
-	background:#a2bcc0;
+	/*background:#a2bcc0;*/
+	background: #378b96 none;
 	width: 150px; 
-	font: bold 16px Helvetica, Arial, Sans-Serif;
-	border: 1px solid #a2bcc0;
+	font-weight: bold;
+	/*border: 1px solid #a2bcc0;*/
+	border: 1px solid #378b96;
 	color: #fafafa;
 
 	-moz-border-radius: 3px;
@@ -432,7 +399,7 @@ div#container
 }
 
 .conftsel {
-	font: 12px Helvetica, Arial, Sans-Serif;
+	font-size: 0.75em;
 	border: 1px solid #ccc;
 	background:#fff;
 
