@@ -31,6 +31,7 @@ import SearchModule
 import logging
 import base64
 import re
+import os
 import copy
 from xmlrpclib import ServerProxy
 import urllib2
@@ -59,13 +60,15 @@ def listpossiblesearchoptions():
 							['PS3','PS3',''],
 							['ANDROID','Android',''],
 							['MOBI','Ebook (mobi)',''],
-							['EPUB','Ebook (epub)',''] ]
+							['EPUB','Ebook (epub)',''],
+							['FLAC','Audio FLAC',''] ]
 	return possibleopt						
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 class DoParallelSearch:
 	
 	def __init__(self, conf, cgen, ds, wrp):
 		
+		self.dirconf=  os.getenv('OPENSHIFT_DATA_DIR', '')
 		self.results = []
 		self.cfg = conf
 		self.cgen = cgen
@@ -76,7 +79,9 @@ class DoParallelSearch:
 		self.ds = ds			
 		self.wrp = wrp
 		self.sckname = self.getdomainandprotocol(self.cgen['general_ipaddress'])
-
+		self.returncode = []
+		self.returncode_fine = {}
+		
 		print '>> Base domain and protocol: ' + self.sckname
 	
 		if(self.cfg is not None):
@@ -132,12 +137,16 @@ class DoParallelSearch:
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 	
 	def getdomainandprotocol(self, sgetsockname):
-		if(len(sgetsockname)==0):
-			sgetsockname = getdomainext()
-		hprotocol = 'http://'
-		if(self.cgen['general_https']):
-			hprotocol = 'https://'
-		sckname = hprotocol + sgetsockname +':'+ str(self.cgen['portno'])
+		if(len(self.dirconf)==0):
+			if(len(sgetsockname)==0):
+				sgetsockname = getdomainext()
+			hprotocol = 'http://'
+			if(self.cgen['general_https']):
+				hprotocol = 'https://'
+			sckname = hprotocol + sgetsockname +':'+ str(self.cgen['portno'])
+		else:
+			#~ only SSL encrypted allowed from openshift
+			sckname = 'https://' + sgetsockname			
 		return sckname
 		
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 		
@@ -184,9 +193,12 @@ class DoParallelSearch:
 			return self.results
 						
 		self.cleancache()
-		self.resultsraw = self.chkforcache(self.wrp.chash64_encode(self.qry_nologic), speed_class_sel)
+		#~ cache hit, no server report
+		self.returncode_fine['code'] = 2
+		self.resultsraw = self.chkforcache(self.wrp.chash64_encode(SearchModule.sanitize_strings(self.qry_nologic)), speed_class_sel)
 		if( self.resultsraw is None):
 			self.resultsraw = SearchModule.performSearch(self.qry_nologic, self.cfg, self.ds )
+			self.prepareretcode();
 			
 		if( self.cgen['smartsearch'] == 1):
 			#~ smartsearch
@@ -199,7 +211,36 @@ class DoParallelSearch:
 					if (self.resultsraw[provid][z]['title'] != None):
 						self.results.append(self.resultsraw[provid][z])
 
+	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+		
+	def prepareretcode(self):
+		self.returncode_fine = {}
+		rcode = []
+		
+		for cfg_t in self.cfg:
+			if('retcode' in cfg_t):
+				rcode.append(cfg_t['retcode'])
 
+		for cfg_ds_base in self.ds.ds:
+			if('retcode' in cfg_ds_base.cur_cfg):
+				rcode.append(cfg_ds_base.cur_cfg['retcode'])
+				#~ print cfg_ds_base.cur_cfg['retcode']
+		
+		codesuccess = 1
+		rr_codesuccess = []
+		for rr in rcode:
+			rr_msg = ''
+			if(rr[0] == 200):
+				rr_msg = "SUCCESS (200): "+rr[3]+" responded in "+'%.1f' % rr[2] + "s  <br>"
+			else:
+				codesuccess = 0
+				rr_msg = "<p class='text-red'> ERROR ("+str(rr[0])+") :"+rr[1] + ' (' + rr[3]+')</p>'
+				#~ rr_msg = "ERROR ("+str(rr[0])+") :"+rr[1] + ' (' + rr[3]+')'
+			rr_codesuccess.append(rr_msg)
+			#~ self.returncode_fine['info'].append(rr_msg)	
+				
+		self.returncode_fine['info'] = sorted(rr_codesuccess,reverse=True) 
+		self.returncode_fine['code'] = codesuccess
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 		
 	def renderit(self,params):
@@ -232,8 +273,10 @@ class DoParallelSearch:
 		#~ params['ver']['chk'] = 1
 		#~ params['ver']['os'] = 'openshift'
 		return render_template('main_page.html', vr=params['ver'], nc=self.svalid, sugg = [], 
+								cgen = self.cgen,
 								trend_show = params['trend_show'], trend_movie = params['trend_movie'], debug_flag = params['debugflag'],
 								large_server = self.cgen['large_server'],
+								servercode_return = [],
 								sstring  = "", selectable_opt = possibleopt, search_opt = searchopt_local,  motd = self.cgen['motd'], sid = params['sid'])
 		
 	
@@ -318,6 +361,7 @@ class DoParallelSearch:
 									name=send2sab_exist+'/'+args['data'],
 									apikey=self.cgen['sabnzbd_api'],
 								)
+				print args['data']
 				try:				
 					http_result = requests.get(url=urlq, params=urlParams, verify=False, timeout=15)
 				except Exception as e:
@@ -359,10 +403,10 @@ class DoParallelSearch:
 					#~ print '-----------------'
 					if(results[i]['title'] == predb_info[j]['title']):
 						results[i]['predb']  = 2
-						results[i]['predb_lnk']  = predb_info[j]['link']
+						results[i]['predb_lnk']  = 'http://www.derefer.me/?'+predb_info[j]['link']
 					elif(results[i]['title'].lower().find(predb_info[j]['title'].lower()) != -1):
 						results[i]['predb']  = 1
-						results[i]['predb_lnk']  = predb_info[j]['link']
+						results[i]['predb_lnk']  = 'http://www.derefer.me/?'+predb_info[j]['link']
 			#~ print results[i]['predb']			
 			
 						
@@ -416,7 +460,14 @@ class DoParallelSearch:
 			
 			if (results[i]['size'] == -1):
 				fsze1 = 'N/A'
-			totdays = (datetime.datetime.today() - datetime.datetime.fromtimestamp(results[i]['posting_date_timestamp'])).days + 1		
+			totdays = int ( (time.time() - results[i]['posting_date_timestamp'])/ (3600*24) )
+			
+			if(totdays == 0):
+				totdays = int ( (time.time() - results[i]['posting_date_timestamp'])/ (3600) )
+				if(totdays < 0):
+					totdays = -totdays
+				totdays = str(totdays) + "h"	
+
 			category_str = '' 
 			keynum = len(results[i]['categ'])
 			keycount = 0
@@ -461,16 +512,17 @@ class DoParallelSearch:
 			speed_class_sel = int(args['tm'])
 		
 		#~ save for caching
-		if(self.cgen['cache_active'] == 1 and len(self.resultsraw)>0):
-			if(len(self.collect_info) < self.cgen['max_cache_qty']):
-				if(self.chkforcache(self.wrp.chash64_encode(self.qry_nologic), speed_class_sel) is None):
-					collect_all = {}
-					collect_all['searchstr'] = self.wrp.chash64_encode(self.qry_nologic)
-					collect_all['tstamp'] =  time.time()
-					collect_all['resultsraw'] = self.resultsraw		
-					collect_all['speedclass'] = speed_class_sel		
-					self.collect_info.append(collect_all)
-					#~ print 'Result added to the cache list'
+		if(self.resultsraw is not None):
+			if(self.cgen['cache_active'] == 1 and len(self.resultsraw)>0):
+				if(len(self.collect_info) < self.cgen['max_cache_qty']):
+					if(self.chkforcache(self.wrp.chash64_encode(SearchModule.sanitize_strings(self.qry_nologic)), speed_class_sel) is None):						
+						collect_all = {}
+						collect_all['searchstr'] = self.wrp.chash64_encode(SearchModule.sanitize_strings(self.qry_nologic))
+						collect_all['tstamp'] =  time.time()
+						collect_all['resultsraw'] = self.resultsraw		
+						collect_all['speedclass'] = speed_class_sel		
+						self.collect_info.append(collect_all)
+						#~ print 'Result added to the cache list'
 		#~ ~ ~ ~ ~ ~ ~ ~ ~ 
 		scat = ''
 		if('selcat' in params['args']):
@@ -490,6 +542,7 @@ class DoParallelSearch:
 												selectable_opt = params['selectable_opt'],
 												search_opt =  params['search_opt'],
 												sid = params['sid'],
+												servercode_return = self.returncode_fine,
 												large_server = self.cgen['large_server'],
 												motd = params['motd'] )
 

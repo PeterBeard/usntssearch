@@ -96,7 +96,7 @@
 					<h1>Movies Trending</h1>
 					<ul>
 						{% for tm in trend_movie -%}
-						<li><a href="s?q={{ tm['searchstr'] }}">{{ tm['prettytxt'] }}</a> <a href="{{ tm['imdb_url'] }}"><img src="static/imdb.png" width="16" height="16" alt="IMDb" /></a></li>
+						<li><a href="s?q={{ tm['searchstr'] }}">{{ tm['prettytxt'] }}</a> <a href="http://www.dereferer.org/?{{ tm['imdb_url'] }}"><img src="static/imdb.png" width="16" height="16" alt="IMDb" /></a></li>
 						{%- endfor %}
 					</ul>
 				</div>
@@ -106,7 +106,7 @@
 					<h1>Shows Trending</h1>
 					<ul>
 						{% for ts in trend_show -%}
-						<li><a href="s?q={{ ts['searchstr'] }}">{{ ts['prettytxt'] }}</a> <a href="{{ ts['imdb_url'] }}"><img src="static/tvdb.gif" width="16" height="16" alt="tvdb" /></a></li>
+						<li><a href="s?q={{ ts['searchstr'] }}">{{ ts['prettytxt'] }}</a> <a href="http://www.dereferer.org/?{{ ts['imdb_url'] }}"><img src="static/tvdb.gif" width="16" height="16" alt="tvdb" /></a></li>
 						{%- endfor %}
 					</ul>
 				</div>
@@ -124,6 +124,48 @@
 			</div>
 			<br style="clear:both;" />
 			{%- endif %}
+			{% if servercode_return -%}
+				<div class="alert-box" id="alertsuccess">
+					<b>Connectivity:</b> 
+					{% if servercode_return['code'] == 2 -%}
+						cache hit :)
+					{% elif servercode_return['code'] == 1 -%}
+						<img src="static/ok.png" onmouseover="this.src='static/ok_hover.png'" onmouseout="this.src='static/ok.png'">
+					{% elif servercode_return['code'] == 0 -%}
+						<img src="static/error.png" onmouseover="this.src='static/error_hover.png'"  onmouseout="this.src='static/error.png'">
+					{% endif %}
+				</div>
+
+				<div class="alert-box alert-box_info " id="alertinfo">
+
+					{% for scode in servercode_return['info'] -%}
+						{{ scode|safe}}
+					{%- endfor %}				
+				</div>	
+				
+				{%- if not results %}
+					<table class="results" summary="Search Results">
+						<thead>
+							<tr><th scope="col" class=titlecell><b>Title <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
+								<th scope="col" class=sizecell><b>Type <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
+								<th scope="col" class=sizecell><b>Size <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
+								<th scope="col" class=datecell><b>Days <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
+								<th scope="col" class=providercell><b>Comments <img src="static/arrow-down.png" style='vertical-align: middle;' alt="sort"/></b></a></th>
+							</tr>
+						</thead>
+						<tbody>
+						<tr>
+							<td class="titlecell"> <p class='text-red'> Your search did not match any documents </p></td>
+							<td class="sizecell"> </td>
+							<td class="sizecell"> </td>
+							<td class="datecell"> </td>
+							<td class="providercell"> </td>
+						</tr>
+						</tbody>
+					</table>
+				{% endif %}
+			{% endif %}
+				
 			{% if results -%}
 			<table class="results" summary="Search Results">
 				<thead>
@@ -157,12 +199,12 @@
 
 							{% if row['predb'] == 2 -%}
 							<span class = "predbcell">
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="16" height="16" class="imgdisplayed"/></a>
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="12" height="12" class="imgdisplayed"  title="Entry fully matching a PREDB release" /></a>
 							</span>	
 							{%- endif %}
 							{% if row['predb'] == 1 -%}
 							<span class = "predbcell">
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="16" height="16" class="imgdisplayed"/></a>
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="12" height="12" class="imgdisplayed"  title="Entry partially matching a PREDB release"/></a>
 							</span>	
 							{%- endif %}
 						</td>
@@ -199,6 +241,7 @@
 						<td class="titlecell">
 							{% if send2sab_exist   -%}
 								<a href="#" id=tosab_lnk name=tosab_infol{{ row['id'] }}>
+								<a href= "" id=tosab_lnk name=tosab_info{{ row['id'] }}>
 								<input type="hidden" value="{{ row['url_encr'] }}" name=tosab_info{{ row['id'] }}>
 								<img src="static/sab2_16.png" style='vertical-align: middle;' width="16" height="16"/ name=tosab_info{{ row['id'] }}_img>
 							{%- endif %}
@@ -213,11 +256,11 @@
 
 							{% if row['predb'] == 2 -%}
 							<span class = "predbcell">							
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="16" height="16" class="imgdisplayed"/></a>
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_1st.png" width="12" height="12" class="imgdisplayed"/></a>
 							{%- endif %}
 							{% if row['predb'] == 1 -%}
 							<span class = "predbcell">
-								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="16" height="16" class="imgdisplayed"/></a>
+								<a href="{{ row['predb_lnk'] }}"><img src="static/predb_2nd.png" width="12" height="12" class="imgdisplayed"/></a>
 							</span>									
 							{%- endif %}
 						</td>
@@ -234,6 +277,48 @@
 			{%- endif %}
 
 		</div>
+		{% if large_server  == False -%}
+			<div class="topright_tight">
+				{% if vr['chk']  == 1 and vr['os']  == 'linux' -%}
+				[ <a href='restart?sid={{ sid }}'>
+						<span style='color: #ff0000'>Autoupdate Now!</span>
+				</a> ]
+				{%- else %}
+					[ <a href='https://github.com/pillone/usntssearch'>
+						{% if vr['chk']  == 1 -%}
+							<span style='color: #ff0000'>Update Now!</span>
+						{%- endif %}
+						{% if vr['chk']  == -1 -%}
+							<span style='color: #ff0000'>Error checking updates</span>
+						{%- endif %}
+						{% if vr['chk']  == 0 -%}
+							Github
+						{%- endif %}
+					</a> ]
+				{%- endif %}
+				[ <a href= "connect"><img src="static/sick_logo.png" width="" height="16" style='vertical-align: bottom;' alt="connect" /><img src="static/cp_logo.png" width="" height="16" alt=""/></a> ]
+				[ <a href= "log"><img src="static/log.png" width="16" height="16" style='vertical-align: bottom;' alt="log" /></a> ]
+				[ <a href='config'><img src="static/options.png" width="" height="16" style='vertical-align: bottom;' alt="config" /></a> ]
+  			    {% if cgen['general_restrictopt1'] == 0 -%}
+					[ {% if vr['os']  != 'openshift' -%}
+							<a href='restart?sid={{ sid }}' OnClick="return confirm('Do you really want to restart the program?');" class='restartbutton'><img src="static/restart.png" width="" height="16" style='vertical-align: bottom;' alt="restart"/></a>
+					  {%- endif %}
+					  {% if cgen['general_restrictopt1'] == 0 -%}
+						<a href='poweroff?sid={{ sid }}' OnClick="return confirm('Do you really want to halt the program?');"><img src="static/off.png" width="" height="16" style='vertical-align: bottom;' alt="power off"/></a> 
+					  {%- endif %}						
+					]
+				{%- endif %}	
+				</div>
+			</div>
+		{%- endif %}
+
+		{% if large_server  == True -%}
+			<div class="topright_tight">
+				[ <a href='https://github.com/pillone/usntssearch'> Get NZBMegasearch Github</a>]
+				[ <a href='legal'>DMCA</a>]
+				[ <a href= "connect"><img src="static/sick_logo.png" width="" height="16" style='vertical-align: bottom;' /><img src="static/cp_logo.png" width="" height="16" /></a> ]
+			</div>
+		{%- endif %}
 
 		<div class="bottomcenter">ver. {{ vr['curver'] }} -- # {{ nc  }} -- 0byte
 					{% if vr['os']  == 'openshift' -%}
@@ -242,6 +327,8 @@
 		</div>
 
 	    <script type="text/javascript">
+		var serverinfo = 0;
+
 	    $(document).ready(function() {
 			// Auto-dismiss any flash messages after 5 seconds
 			setTimeout(function(){$('.flash').fadeOut(750);}, 5000);
@@ -264,6 +351,20 @@
 
 								});
 				return false;
+
+			});
+			
+			$("#alertsuccess").click(function () {
+				if(serverinfo == 0)
+				{
+					$("#alertinfo").show();
+					serverinfo = 1;
+				}
+				else
+				{
+					$("#alertinfo").hide();
+					serverinfo = 0;
+				}
 
 			});
 			
@@ -316,6 +417,7 @@
             });
 			$.unblockUI();
 	     });
+	     
 		</script>
 	</body>
 </html>

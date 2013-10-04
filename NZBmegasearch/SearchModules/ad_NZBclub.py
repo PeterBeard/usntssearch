@@ -19,7 +19,6 @@ from SearchModule import *
 import urllib
 import time
 
-# Search on Newznab
 class ad_NZBclub(SearchModule):
 	# Set up class variables
 	def __init__(self, configFile=None):
@@ -65,16 +64,13 @@ class ad_NZBclub(SearchModule):
             sp= 1,
             ns= 1	)
          
-		parsed_data = self.parse_xmlsearch_special(urlParams, cfg['timeout'])	
-		
-		#~ for i in xrange(len(parsed_data)):
-			#~ parsed_data[i]['url'] = urllib.quote(parsed_data[i]['url'], safe='/:' )
+		parsed_data = self.parse_xmlsearch_special(urlParams, cfg['timeout'], cfg)	
 
 		return parsed_data
 	
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-	def parse_xmlsearch_special(self, urlParams, tout): 
+	def parse_xmlsearch_special(self, urlParams, tout, cfg): 
 		parsed_data = []
 		timestamp_s = time.time()	
 
@@ -85,8 +81,7 @@ class ad_NZBclub(SearchModule):
 			mssg = self.queryURL + ' -- ' + str(e)
 			print mssg
 			log.critical(mssg)
-			#~ error_rlimit = str(e.args[0]).find('Max retries exceeded')
-			#~ print error_rlimit
+			cfg['retcode'] = [600, 'Server timeout', tout,self.name]
 			return parsed_data
 
 		timestamp_e = time.time()
@@ -100,6 +95,7 @@ class ad_NZBclub(SearchModule):
 			tree = ET.fromstring(data.encode('utf-8'))
 		except Exception as e:
 			print e
+			cfg['retcode'] = [250, 'Server responded with no results or with an unexpected format', timestamp_e - timestamp_s,self.name]			
 			return parsed_data
 
 		#~ successful parsing
@@ -115,7 +111,6 @@ class ad_NZBclub(SearchModule):
 			try: 
 				elem_postdate =  time.mktime(datetime.datetime.strptime(elem_pubdate.text[0:len_elem_pubdate-6], "%a, %d %b %Y %H:%M:%S").timetuple())
 			except Exception as e:
-				#~ if fails..
 				elem_postdate = datetime.datetime.now()
 			
 			elem_poster = ''
@@ -156,11 +151,11 @@ class ad_NZBclub(SearchModule):
 
 			parsed_data.append(d1)
 			
-		#~ that's dirty but effective
-		if(	len(parsed_data) == 0 and len(data) < 100):
-			limitpos = data.encode('utf-8').find('<error code="500"')
-			if(limitpos != -1):
-				mssg = 'ERROR: Download/Search limit reached ' + self.queryURL
-				print mssg
-				log.error (mssg)
+		returncode = self.default_retcode
+		if(	len(parsed_data) == 0 and len(data) < 300):
+			returncode = self.checkreturn(data)
+		returncode[2] = timestamp_e - timestamp_s
+		returncode[3] = self.name
+		cfg['retcode'] = copy.deepcopy(returncode)
+						
 		return parsed_data		

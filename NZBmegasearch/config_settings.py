@@ -45,10 +45,30 @@ class CfgSettings:
 		self.read_conf_general()
 		self.read_conf_custom()
 		self.read_conf_deepsearch()
+		self.filter_obsolete_providers()
 		
 	def	reset(self):
 		self.cfg = []
+
+	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
+	def	filter_obsolete_providers(self):
 		
+		#~ avoids obsolete modules to appear in the search routine
+		#~ this is an additional safety measure
+		if 'loadedModules' not in globals():
+			SearchModule.loadSearchModules()
+		
+		saved_cfg = []
+		for index in xrange(len(self.cfg)):
+			index_found = False
+			for module in SearchModule.loadedModules:
+				if( module.typesrch == self.cfg[index]['type']):
+					index_found = True
+			if(index_found is True):
+				saved_cfg.append(self.cfg[index])
+		self.cfg = copy.deepcopy(saved_cfg)
+						
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
 	def	write(self, request_form):
@@ -88,12 +108,18 @@ class CfgSettings:
 		parser.set('general', 'smartsearch', '0')
 		parser.set('general', 'cache_active', '0')	
 		parser.set('general', 'general_ipaddress', '')		
-		parser.set('general', 'predb_active', '0')		
+		parser.set('general', 'predb_active', '0')	
+		parser.set('general', 'general_restrictopt1', '0')				
 
-		if (request_form['general_ipaddress'] != 'AUTO'):
-			parser.set('general', 'general_ipaddress', request_form['general_ipaddress'].replace(" ", ""))
+		if (request_form['general_ipaddress'] != 'AUTO'):			
+			cip = request_form['general_ipaddress'].replace(" ", "").replace("http://", "").replace("https://", "")
+			if(cip[-1] == '/'):
+				cip = cip[:-1]
+			parser.set('general', 'general_ipaddress', cip)
 		if (request_form.has_key('https')  == True):
 			parser.set('general', 'general_https', '1')
+		if (request_form.has_key('general_restrictopt1')  == True):
+			parser.set('general', 'general_restrictopt1', '1')
 		if (request_form.has_key('trends')  == True):
 			parser.set('general', 'trends', '1')
 		if (request_form.has_key('sugg')  == True):
@@ -121,9 +147,12 @@ class CfgSettings:
 		parser.set('general', 'nzbget_user', request_form['nzbget_user'].replace(" ", ""))
 		parser.set('general', 'nzbget_pwd', request_form['nzbget_pwd'].replace(" ", ""))
 		
+		no_APInab = int(request_form['no_APInab'])+1
+		no_WEBnab = int(request_form['no_WEBnab'])+1
+		
 		#~ custom
 		counter = 1
-		for i in xrange(MAX_PROVIDER_NUMBER):
+		for i in xrange(no_APInab):
 			if (request_form.has_key('host%d' % i)  == True):
 				if(request_form['host%d' % i].replace(" ", "")): 
 					parser.add_section('search_provider%s' % counter)
@@ -168,7 +197,7 @@ class CfgSettings:
 
 		#~ web search
 		counter3 = 1
-		for i in xrange(MAX_PROVIDER_NUMBER):
+		for i in xrange(no_WEBnab):
 			if (request_form.has_key('ds_host%d' % i)  == True):
 				if(request_form['ds_host%d' % i].replace(" ", "")): 
 					parser.add_section('deep_search_provider%s' % counter3)
@@ -299,8 +328,7 @@ class CfgSettings:
 		gen_trends_qty = parser.getint('general', 'trends_qty')
 		smartsearch = parser.getint('general', 'smartsearch')
 		cache_active = parser.getint('general', 'cache_active')
-		searchaddontxt = parser.get('general', 'searchaddontxt')
-		
+		searchaddontxt = parser.get('general', 'searchaddontxt')		
 		self.cgen = {'portno': portno, 'general_usr' : gen_user, 'general_pwd' : gen_pwd, 'general_trend' : gen_trd,
 				'httpauth_salt':httpauth_salt,
 				'config_user':config_user,
@@ -320,6 +348,7 @@ class CfgSettings:
 				'sabnzbd_url' : '', 'sabnzbd_api':'',
 				'nzbget_url' : '', 'nzbget_user':'','nzbget_pwd':'',
 				'general_apikey' : '',
+				'general_restrictopt1' : 0,
 				'predb_active' : 1,
 				'stats_key' : gen_stats_key, 'motd':gen_motd}
 		self.selectable_speedopt = copy.deepcopy(self.selectable_speedopt_cpy)
@@ -406,6 +435,8 @@ class CfgSettings:
 				self.cgen['general_ipaddress'] = cst_parser.get('general', 'general_ipaddress')
 			if(cst_parser.has_option('general' ,'predb_active')):	
 				self.cgen['predb_active'] = cst_parser.getint('general', 'predb_active')
+			if(cst_parser.has_option('general' ,'general_restrictopt1')):	
+				self.cgen['general_restrictopt1'] = cst_parser.getint('general', 'general_restrictopt1')
 
 
 
@@ -596,10 +627,13 @@ class CfgSettings:
 		genopt['smartsearch_verbose']	 = ''
 		genopt['max_cache_verbose']	 = ''
 		genopt['predb_active_verbose']	 = ''		
+		genopt['general_restrictopt1_verbose']	 = ''				
 		if(genopt['predb_active'] == 1):
 			genopt['predb_active_verbose']	 = 'checked=yes'
 		if(genopt['general_https'] == 1):
 			genopt['general_https_verbose']	 = 'checked=yes'
+		if(genopt['general_restrictopt1'] == 1):
+			genopt['general_restrictopt1_verbose']	 = 'checked=yes'
 		if(genopt['general_suggestion'] == 1):
 			genopt['general_suggestion_verbose']	 = 'checked=yes'
 		if(genopt['general_trend'] == 1):

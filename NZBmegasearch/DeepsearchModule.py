@@ -15,6 +15,7 @@
 #~ along with NZBmegasearch.  If not, see <http://www.gnu.org/licenses/>.
 # # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## # ## #    
 
+
 import re
 import time
 import tempfile
@@ -28,6 +29,7 @@ from urllib2 import urlparse
 import socket
 import locale
 import copy
+import megasearch
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +45,6 @@ def supportedengines ():
 class DeepSearch:
 
 	def __init__(self, cur_cfg, cgen):
-		
 		self.cfg = None
 		self.cgen = cgen
 		self.ds = []
@@ -90,6 +91,7 @@ class DeepSearch:
 class DeepSearch_one:
 	
 	def __init__(self, cur_cfg, cgen):
+		self.definedcat = megasearch.listpossiblesearchoptions()
 		self.br = mechanize.Browser(factory=mechanize.RobustFactory())
 		self.cj = cookielib.LWPCookieJar()
 		self.br.set_cookiejar(self.cj)
@@ -107,7 +109,8 @@ class DeepSearch_one:
 		self.basic_sz = 1024*1024
 		#~ self.dologin()
 		self.typesrch = 'DSNINIT'
-	
+		self.default_retcode=[200, 'Ok', 0, self.name]
+
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 	@classmethod
 	def basics(self):
@@ -131,18 +134,24 @@ class DeepSearch_one:
 
 	def mech_error_generic (self, e):
 		if(str(e).find("Errno 111") != -1):
-			print "Wrong url or site down " + self.baseURL
-			log.warning("Wrong url or site down " + self.baseURL)
+			#~ print "Wrong url or site down " + ' ' + self.baseURL
+			log.warning("Wrong url or site down "  + self.baseURL)
+			self.cur_cfg['retcode'] = [700, 'Server responded in unexpected format', self.timeout, self.name]
 			return 111
 		if(str(e).find("timed out") != -1):
-			print "Too much time to respond "  + self.baseURL
-			log.warning("Too much time to respond "  + self.baseURL)
+			#~ print "Too much time to respond "  + ' ' + self.baseURL
+			log.warning("Too much time to respond - "  + self.baseURL)
+			self.cur_cfg['retcode'] = [600, 'Server timeout', self.timeout, self.name]			
 			return 500
 		if(str(e).find("HTTP Error 302") != -1):
-			log.warning("Fetched exception login: " + str(e) + self.baseURL)
+			log.warning("Fetched exception login: " + str(e) + ' - ' + self.baseURL)
+			self.cur_cfg['retcode'] = [100, 'Incorrect user credentials', self.timeout, self.name]			
+
 			return 302
-		print "Fetched exception: "  + self.baseURL + str(e)
-		log.warning("Fetched exception: "  + self.baseURL + str(e))
+		#~ print "Fetched exception: "  + self.baseURL + ' ' + str(e)
+		log.warning("Fetched exception: "  + self.baseURL + ' - ' + str(e))
+		self.cur_cfg['retcode'] = [400, 'Generic server error', self.timeout, self.name]
+		
 		return 440
 
 
@@ -271,7 +280,19 @@ class DeepSearch_one:
 
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 					
 
+	def search_cat(self, dic_searchopt):
+		
+		return self.search_raw("/browse?t=",dic_searchopt['cat'])
+		
+	
+	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 					
+
 	def search(self, srchstr):
+		
+		return self.search_raw("/search/", srchstr)
+	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 					
+
+	def search_raw(self, pagestr, srchstr):
 		if(self.cur_cfg['valid'] == 0):
 			return []
 		
@@ -280,12 +301,13 @@ class DeepSearch_one:
 		#~ WIN: it seems to have issue in win32
 		# locale.setlocale( locale.LC_ALL, 'en_US.utf8' )
 		
+		self.cur_cfg['retcode']  = self.default_retcode
 		if	(self.chkcookie() == False):
 			if(self.dologin() == False):
 				return []
 
 		mainurl = self.cur_cfg['url']
-		loginurl = mainurl + "/search/"+srchstr
+		loginurl = mainurl + pagestr+srchstr
 		timestamp_s = time.time()	
 		try:
 			socket.setdefaulttimeout(self.timeout)
@@ -300,7 +322,8 @@ class DeepSearch_one:
 		data = res.get_data()  
 		timestamp_e = time.time()
 		log.info('TS ' + mainurl + " " + str(timestamp_e - timestamp_s))
-
+		self.cur_cfg['retcode'][2]  = timestamp_e - timestamp_s
+		
 		soup = beautifulsoup.BeautifulSoup(data)
 
 	#~ def searchDBG(self, srchstr):
@@ -401,7 +424,9 @@ class DeepSearchGinga_one(DeepSearch_one):
 		if	( self.chkcookie() == True):
 			return True
 		mainurl = self.cur_cfg['url']
-		loginurl = mainurl + "/index.php"
+		#~ loginurl = mainurl + "/index.php"
+		#~ more robust
+		loginurl = mainurl + "/login"
 		
 		#~ print "Logging in: " + mainurl
 		#~ log.info("Logging in: " + mainurl)
@@ -451,13 +476,21 @@ class DeepSearchGinga_one(DeepSearch_one):
 		
 		socket.setdefaulttimeout(self.timeout)
 
+		self.cur_cfg['retcode']  = self.default_retcode
 		if	(self.chkcookie() == False):
 			if(self.dologin() == False):
 				return []
 						
 		mainurl = self.cur_cfg['url']
-		#~ https://www.gingadaddy.com/nzbbrowse.php?b=2&st=1&k=dog&c=0&g=0&sr=2&o=0
 		
+		#~ category must have asterisk, it messes up the search
+		srchstrnu = srchstr.split('.')
+		
+		for defcats in self.definedcat:
+			if(defcats[0] == srchstrnu[-1]):
+				srchstrnu[-1] = '*'+srchstrnu[-1]
+				srchstr = ".".join(srchstrnu)
+
 		loginurl = mainurl + '/nzbbrowse.php?b=2&st=1&c=0&g=0&sr=2&o=0&k='+srchstr
 		timestamp_s = time.time()	
 		
@@ -474,7 +507,7 @@ class DeepSearchGinga_one(DeepSearch_one):
 		data = res.get_data()  
 		timestamp_e = time.time()
 		log.info('TS ' + mainurl + " " + str(timestamp_e - timestamp_s))
-		
+		self.cur_cfg['retcode'][2]  = timestamp_e - timestamp_s
 
 		#~ def searchDBG(self, srchstr):
 		#~ handler = open('test.html').read()

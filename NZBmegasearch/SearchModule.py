@@ -27,6 +27,7 @@ import copy
 import threading
 import re
 import logging
+import unicodedata
 
 log = logging.getLogger(__name__)
 
@@ -56,15 +57,15 @@ def loadSearchModules(moduleDir = None):
 	searchModuleNames = [];
 	if moduleDir == None:
 		moduleDir = resource_path('SearchModules/')
-	print '>> Loading modules from: ' + moduleDir
+	#~ print '>> Loading modules from: ' + moduleDir
 	for file in os.listdir(moduleDir):
 		if file.endswith('.py') and file != '__init__.py':
 			searchModuleNames.append(file[0:-3])
 	if len(searchModuleNames) == 0:
-		print '>> No search modules found.'
+		#~ print '>> No search modules found.'
 		return
-	else:
-		print '>> Found ' + str(len(searchModuleNames)) + ' modules'
+	#~ else:
+		#~ print '>> Found ' + str(len(searchModuleNames)) + ' modules'
 		
 	searchModuleNames = sorted(searchModuleNames)
 	path = list(sys.path)
@@ -72,7 +73,7 @@ def loadSearchModules(moduleDir = None):
 
 	# Import the modules that the user has enabled
 	mssg = '>> Importing: ' + ', '.join(searchModuleNames)
-	print mssg
+	#~ print mssg
 	log.info (mssg)
 
 	try:
@@ -101,7 +102,7 @@ def loadSearchModules(moduleDir = None):
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 	
 # Perform a search using all available modules
-def performSearch(queryString,  cfg, dsearch=None, extraparam=None):
+def performSearch(queryString,  cfg, dsearch=None, extraparam=None, stoppingthreads=1):
 		
 	queryString = queryString.strip()
 	queryString = sanitize_strings(queryString)
@@ -117,34 +118,51 @@ def performSearch(queryString,  cfg, dsearch=None, extraparam=None):
 
 	#~ prepare cpy modules (thread safety), not nice
 	neededModules = []
+	neededModules_LUT = [None]*len(cfg)
 	for index in xrange(len(cfg)):
 		for module in loadedModules:
 			if( module.typesrch == cfg[index]['type']):
 				neededModules.append(copy.copy(module))
+				neededModules_LUT[index] = len(neededModules)-1
 
 	#~ for SB autodiscovery, uses all the possible providers
 	if (extraparam is not None):
 		for index in xrange(len(cfg)):
 			rval = (neededModules[index].api_catsearch and cfg[index]['valid'] > 0)
+			if (neededModules_LUT[index] is None):
+				rval = False	
 
 			if(rval == True):
 				try:
-					t = threading.Thread(target=performSearchThreadRaw, args=(extraparam,neededModules[index],lock,cfg[index]))
+					module_idx = neededModules_LUT[index]
+					t = threading.Thread(target=performSearchThreadRaw, args=(extraparam,neededModules[module_idx],lock,cfg[index]))
 					t.start()
 					threadHandles.append(t)
 				except Exception as e:
-					print 'Error starting apisearch thread  : ' + str(e)
+					print 'Error starting raw apisearch thread  : ' + str(e)
+		if(dsearch is not None):
+			for index in xrange(len(dsearch.ds)):
+				if(dsearch.ds[index].cur_cfg['valid'] == 1):
+					try:
+						t = threading.Thread(target=performSearchThreadDSRaw, args=(extraparam,lock,dsearch.ds[index]))
+						t.start()
+						threadHandles.append(t)
+					except Exception as e:
+						print 'Error starting raw deepsearch thread  : ' + str(e)			
 
 	else:
 	#~ for standard search
 		for index in xrange(len(cfg)):
 			rval = False
 			if (((dsearch is not None) and (cfg[index]['valid'] == 2)) or (cfg[index]['valid'] == 1)):
-				rval = True			
+				rval = True	
+			if (neededModules_LUT[index] is None):
+				rval = False	
+			
 			if(rval == True):
 				try:
-					#~ print neededModule 
-					t = threading.Thread(target=performSearchThread, args=(queryString,neededModules[index],lock,cfg[index]))
+					module_idx = neededModules_LUT[index]
+					t = threading.Thread(target=performSearchThread, args=(queryString,neededModules[module_idx],lock,cfg[index]))
 					t.start()
 					threadHandles.append(t)
 				except Exception as e:
@@ -160,8 +178,10 @@ def performSearch(queryString,  cfg, dsearch=None, extraparam=None):
 					except Exception as e:
 						print 'Error starting deepsearch thread  : ' + str(e)
 
-	for t in threadHandles:
-		t.join()
+
+	if(stoppingthreads):
+		for t in threadHandles:
+			t.join()
 
 	return globalResults
 
@@ -178,7 +198,8 @@ def sanitize_html(value):
 def sanitize_strings(value):
 	if(len(value)):
 		value = sanitize_html(value).lower()
-		#~ value = unidecode.unidecode(sanitize_html(value).lower())
+		if(isinstance(value, unicode)):
+			value = unicodedata.normalize('NFKD',value).encode('ascii', 'ignore')
 		value = re.compile("[^A-Za-z0-99]").sub(" ",value)
 		value = " ".join(value.split()).replace(" ", ".") 
 		#~ print value
@@ -208,7 +229,7 @@ def performSearchThread(queryString, neededModule, lock, cfg):
 	localResults = neededModule.search(queryString, cfg)
 	lock.acquire()
 	globalResults.append(localResults)
-
+	
 	try:
 		lock.release()
 	except Exception as e:
@@ -226,7 +247,21 @@ def performSearchThreadDS(queryString, lock, dsearch_one):
 		lock.release()
 	except Exception as e:
 		print e
- 
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+	
+def performSearchThreadDSRaw(extraparam, lock, dsearch_one):
+	
+	
+	localResults = dsearch_one.search_cat(extraparam)
+	lock.acquire()
+	globalResults.append(localResults)
+
+	try:
+		lock.release()
+	except Exception as e:
+		print e
+  
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 # Exception to be raised when a search function is not implemented
@@ -246,6 +281,8 @@ class SearchModule(object):
 		self.baseURL = ''
 		self.nzbDownloadBaseURL = ''
 		self.apiKey = ''
+		self.default_retcode=[200, 'Ok', 0, 'none']
+
 
 	# Show the configuration options for this module
 	def configurationHTML(self):
@@ -259,7 +296,7 @@ class SearchModule(object):
 
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-	def parse_xmlsearch(self, urlParams, tout): 
+	def parse_xmlsearch(self, urlParams, tout, tcfg = None): 
 		parsed_data = []
 		#~ print self.queryURL  + ' ' + urlParams['apikey']
 		timestamp_s = time.time()
@@ -270,7 +307,8 @@ class SearchModule(object):
 		except Exception as e:
 			mssg = self.queryURL + ' -- ' + str(e)
 			print mssg
-			log.critical(mssg)
+			log.critical(mssg)			
+			tcfg['retcode'] = [600, 'Server timeout', tout, self.name]
 			return parsed_data
 			
 		timestamp_e = time.time()	
@@ -343,12 +381,15 @@ class SearchModule(object):
 
 			parsed_data.append(d1)
 			
+		
 		#~ that's dirty but effective
-		if(	len(parsed_data) == 0 and len(data) < 100):
-			limitpos = data.encode('utf-8').find('<error code="500"')
-			if(limitpos != -1):
-				mssg = 'ERROR: Download/Search limit reached ' + self.queryURL
-				print mssg
-				log.error (mssg)
+		if(tcfg is not  None):
+			returncode = self.default_retcode
+			if(	len(parsed_data) == 0 and len(data) < 300):
+				returncode = self.checkreturn(data)
+			returncode[2] = timestamp_e - timestamp_s
+			returncode[3] = self.name
+			tcfg['retcode'] = copy.deepcopy(returncode)
+
 		return parsed_data		
 

@@ -23,7 +23,6 @@ class ah_WMBidx(SearchModule):
 	# Set up class variables
 	def __init__(self, configFile=None):
 		super(ah_WMBidx, self).__init__()
-		# Parse config file		
 		self.name = 'Wombie'
 		self.typesrch = 'WBX'
 		self.queryURL = 'http://www.newshost.co.za/rss/'
@@ -33,25 +32,34 @@ class ah_WMBidx(SearchModule):
 		self.login = 0
 		self.inapi = 1
 		self.api_catsearch = 1
+		self.cookie = {}
+		
 
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 	def search_raw(self, queryopt, cfg):		
 		return self.search(queryopt, cfg)
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
+	
+	def dologin(self, cfg):	
+		# does nothing, it fakes login and fixes sab error with filename
+		self.cookie = {'FTDWSESSID' : 'Blub.blub'}
+		return True
+	
+	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+		
 	# Perform a search using the given query string
 	def search(self, queryString, cfg):
 		urlParams = dict(
             sec= '',
-            fr= 'true'	)
+            fr= 'false'	)
  
-   		parsed_data = self.parse_xmlsearch_special(urlParams, cfg['timeout'])	
+   		parsed_data = self.parse_xmlsearch_special(urlParams, cfg['timeout'], cfg)
 
 		return parsed_data
 
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 		
-	def parse_xmlsearch_special(self, urlParams, tout): 
+	def parse_xmlsearch_special(self, urlParams, tout, tcfg): 
 		parsed_data = []
 		#~ print self.queryURL  + ' ' + urlParams['apikey']
 		timestamp_s = time.time()	
@@ -63,8 +71,7 @@ class ah_WMBidx(SearchModule):
 			mssg = self.queryURL + ' -- ' + str(e)
 			print mssg
 			log.critical(mssg)
-			#~ error_rlimit = str(e.args[0]).find('Max retries exceeded')
-			#~ print error_rlimit
+			tcfg['retcode'] = [600, 'Server timeout', tout]
 			return parsed_data
 		
 		timestamp_e = time.time()
@@ -88,32 +95,48 @@ class ah_WMBidx(SearchModule):
 			elem_title = elem.find("title")
 			elem_url = elem.find("enclosure")
 			elem_pubdate = elem.find("pubDate")
-			len_elem_pubdate = len(elem_pubdate.text)
+			
+			elem_descrip = elem.find("description")
+			elem_category = elem.find("category")
+			
+			if(elem_title is None or elem_url is None or elem_pubdate is None):
+				continue
+							
 			#~ 03/22/2013 17:36
-			elem_postdate =  time.mktime(datetime.datetime.strptime(elem_pubdate.text[0:len_elem_pubdate-6], "%m/%d/%Y %H:%M").timetuple())
+			len_elem_pubdate = len(elem_pubdate.text)
+			
+			try:
+				elem_postdate =  time.mktime(datetime.datetime.strptime(elem_pubdate.text[0:len_elem_pubdate-6], "%m/%d/%Y %H:%M").timetuple())
+			except Exception as e:
+				elem_postdate =  283996800
+				
 			elem_poster = ''
 
 			elem_guid = elem.find("guid")
 			release_details = self.baseURL
-			for attr in elem.iter('newznab_attr'):
-				if('name' in attr.attrib):
-					if (attr.attrib['name'] == 'poster'): 
-						elem_poster = attr.attrib['value']
-					if (attr.attrib['name'] == 'category'):
-						val = attr.attrib['value']
-						if(val in self.category_inv):
-							category_found[self.category_inv[val]] = 1
-						#~ print elem_title.text	
-						#~ print val	
-						#~ print category_found
-						#~ print '=========='
-			if(len(category_found) == 0):
+
+			if(elem_category is not None):
+				category_found[elem_category.text.title()] = 1
+			else:	
 				category_found['N/A'] = 1
 			
+			#~ removes stray ' nzb' comment
+			titletxt = elem_title.text
+			rttf = titletxt.rfind(' nzb')
+			if(rttf != -1):
+				titletxt = titletxt [0:rttf]
+
+			sizetxt = -1	
+			if(elem_descrip is not None):
+				rttf2a = elem_descrip.text.rfind('Size:');
+				rttf2b = elem_descrip.text.rfind('Mb)');
+				if(rttf2a != -1 and rttf2b != -1 ):
+					sizetxt = int (elem_descrip.text[rttf2a+5:rttf2b]) * 1000000
+									
 			d1 = { 
-				'title': elem_title.text,
+				'title': titletxt,
 				'poster': elem_poster,
-				'size': -1,
+				'size': sizetxt,
 				'url': elem_url.attrib['url'],
 				'filelist_preview': '',
 				'group': '',
@@ -122,16 +145,19 @@ class ah_WMBidx(SearchModule):
 				'categ':category_found,
 				'ignore':0,
 				'provider':self.baseURL,
+				'req_pwd':self.typesrch,
 				'providertitle':self.name
 			}
 
 			parsed_data.append(d1)
 			
-		#~ that's dirty but effective
-		if(	len(parsed_data) == 0 and len(data) < 100):
-			limitpos = data.encode('utf-8').find('<error code="500"')
-			if(limitpos != -1):
-				mssg = 'ERROR: Download/Search limit reached ' + self.queryURL
-				print mssg
-				log.error (mssg)
-		return parsed_data		
+		#~ print d1
+		returncode = self.default_retcode
+		if(	len(parsed_data) == 0 and len(data) < 300):
+			returncode = self.checkreturn(data)
+		returncode[2] = timestamp_e - timestamp_s
+		returncode[3] = self.name
+		tcfg['retcode'] = copy.deepcopy(returncode)
+
+		return parsed_data
+

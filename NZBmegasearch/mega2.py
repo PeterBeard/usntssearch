@@ -44,7 +44,26 @@ except ImportError as exc:
 sessionid_string = base64.urlsafe_b64encode(os.urandom(10)).replace('-','').replace('=','').replace('/','').replace('+','')
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
- 	
+def loginit():
+	log = logging.getLogger() 
+	handler = logging.handlers.RotatingFileHandler(logsdir+'nzbmegasearch.log', maxBytes=cfgsets.cgen['log_size'], backupCount=cfgsets.cgen['log_backupcount']) 
+	log.setLevel(logging.INFO) 
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	handler.setFormatter(formatter)
+	log.addHandler(handler)
+	log.info(motd)
+
+	#~ HOOK INTO STDOUT CONSOLE
+	stdout_logger = logging.getLogger('TERMINAL')
+	sl = miscdefs.StreamToLogger(stdout_logger, logging.INFO)
+	sys.stdout = sl
+
+	stderr_logger = logging.getLogger('TERMINAL_ERR')
+	sl = miscdefs.StreamToLogger(stderr_logger, logging.ERROR)
+	sys.stderr = sl
+	
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
 def reload_all():
 	print '>> Bootstrapping...'
 	global cfgsets, sugg, ds, mega_parall, wrp, apiresp, auth
@@ -68,8 +87,13 @@ def reload_all():
 motd = '\n~*~ ~*~ NZBMegasearcH ~*~ ~*~'
 print motd
 
-DEBUGFLAG = False
+#~ DEBUGFLAG = False
+DEBUGFLAG = True
 LARGESERVER = False
+
+logsdir = SearchModule.resource_path('logs/')
+if(len(os.getenv('OPENSHIFT_DATA_DIR', ''))):
+	logsdir = os.environ.get('OPENSHIFT_DATA_DIR')
 
 if(len(sys.argv) > 1):
 	for argv in sys.argv:
@@ -91,8 +115,7 @@ if(len(sys.argv) > 1):
 
 		if(argv == 'daemon'):
 			print '====== DAEMON MODE ======'
-			if os.fork():
-				sys.exit()
+			miscdefs.daemonize(logsdir)	
 
 #~ detect if started from gunicorn
 oshift_dirconf = os.getenv('OPENSHIFT_DATA_DIR', '')
@@ -101,29 +124,21 @@ if( __name__ == 'mega2' and len(oshift_dirconf)==0):
 	LARGESERVER = True
 	
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
 cver = miscdefs.ChkVersion(DEBUGFLAG) 
 print '>> version: '+ str(cver.ver_notify['curver'])
 motd = motd  + ' v.'+str(cver.ver_notify['curver']) + 'large_server: ' + str(LARGESERVER) + ' debug: ' + str(DEBUGFLAG)
 cfgsets = config_settings.CfgSettings()
 first_time = 0
+#~ init logger
+log = loginit()
+#~ bootstrap
 reload_all()
 
 if (cfgsets.cfg is None or cfgsets.cfg_deep is None ):
 	first_time = 1
 	'>> It will be configured'	
 
-logsdir = SearchModule.resource_path('logs/')
-if(len(os.getenv('OPENSHIFT_DATA_DIR', ''))):
-	logsdir = os.environ.get('OPENSHIFT_DATA_DIR')
 certdir = SearchModule.resource_path('certificates/')
-log = logging.getLogger() 
-handler = logging.handlers.RotatingFileHandler(logsdir+'nzbmegasearch.log', maxBytes=cfgsets.cgen['log_size'], backupCount=cfgsets.cgen['log_backupcount']) 
-log.setLevel(logging.INFO) 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-log.addHandler(handler)
-log.info(motd)
 templatedir = SearchModule.resource_path('templates')
 app = Flask(__name__, template_folder=templatedir)
 # Generate a session key
@@ -169,7 +184,31 @@ def static_from_root():
     return send_from_directory(app.static_folder, request.path[1:])
 			
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
- 
+#~ FUTURE USE
+#~ @app.route('/t2', methods=['GET'])
+#~ @auth.requires_auth
+#~ def progress():
+	#~ strst = ' '
+	#~ if (mega_parall.resultsraw != None):
+		#~ for provid in xrange(len(mega_parall.resultsraw)):
+			#~ if (mega_parall.resultsraw[provid] != None):
+				#~ strst = strst + ' ' + str(provid) + ' ' + str(len(mega_parall.resultsraw[provid]))
+	#~ return strst
+ #~ 
+#~ 
+#~ @app.route('/t1', methods=['GET'])
+#~ @auth.requires_auth
+#~ def tsearch():
+	#~ t2 = threading.Thread(target=mega_parall.dosearch, args=(request.args,)   )
+	#~ t2.start()
+	#~ return 'aa'
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
+@app.route('/log', methods=['GET'])
+@auth.requires_auth
+def log():
+	return miscdefs.logviewer(logsdir);
+
 
 @app.route('/s', methods=['GET'])
 @auth.requires_auth
@@ -234,6 +273,21 @@ def warpme():
 		return res
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
+@app.route('/rss')
+def rss():
+	if(len(cfgsets.cgen['general_apikey'])):
+		if('apikey' in request.args):
+			if(request.args['apikey'] == cfgsets.cgen['general_apikey']):
+				return apiresp.dosearch_rss(request.args, urlparse(request.url))
+			else:	
+				return '[API key protection ACTIVE] Wrong key selected'
+		else:	
+				return '[API key protection ACTIVE] API key required'
+	else:
+		return apiresp.dosearch_rss(request.args, urlparse(request.url))
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
 @app.route('/tosab')
 def tosab():
 	return jsonify(code=mega_parall.tosab(request.args, urlparse(request.url) ))
@@ -244,10 +298,27 @@ def tosab():
 def tonzbget():
 	return jsonify(code=mega_parall.tonzbget(request.args, urlparse(request.url) ))
 	
-		
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 	
  
-@app.route('/', methods=['GET','POST'])
+@app.route('/saveconfig', methods=['POST'])
+@auth.requires_auth
+def saveconfig():
+	global first_time
+	savedok = 0
+	if request.method == 'POST':
+		#~ just for showing a minimum waiting
+		time.sleep(1)		
+		if(len(request.form) > 0):
+			cfgsets.write(request.form)
+			first_time = 0
+			savedok = 1
+			reload_all()
+			
+	return jsonify(code=savedok)
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 	
+ 
+@app.route('/', methods=['GET'])
 @auth.requires_auth
 def main_index():
 	#~ flask bug in threads, had to solve like that

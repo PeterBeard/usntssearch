@@ -25,7 +25,6 @@ class Newznab(SearchModule):
 	# Set up class variables
 	def __init__(self, configFile=None):
 		super(Newznab, self).__init__()
-		# Parse config file		
 		self.name = 'Newznab'
 		self.typesrch = 'NAB'
 		self.queryURL = 'xxxx'
@@ -56,7 +55,8 @@ class Newznab(SearchModule):
 			for i in xrange(len(self.categories[key]['code'])):
 				val = self.categories[key]['code'][i]
 				self.category_inv[str(val)] = prettyval
-		#~ print self.category_inv
+
+
 	
 	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 	def search_raw(self, queryopt, cfg):
@@ -84,8 +84,32 @@ class Newznab(SearchModule):
 		self.queryURL = cfg['url'] + '/api'
 		self.baseURL = cfg['url']
 		
-		#~ homemade lazy stuff
 		humanprovider = urlparse.urlparse(cfg['url']).hostname			
 		self.name = humanprovider.replace("www.", "")
-		parsed_data = self.parse_xmlsearch(urlParams, cfg['timeout'])			
+		parsed_data = self.parse_xmlsearch(urlParams, cfg['timeout'], cfg)			
 		return parsed_data		
+
+	#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+	
+	def checkreturn(self, data):
+	
+		retcode = self.default_retcode
+		limitpos = data.encode('utf-8').find('<error code="500"')
+		if(limitpos != -1):
+			mssg = 'Download/Search limit reached ' + self.queryURL
+			limitpos_comment = data.encode('utf-8').find('description="')
+			if(limitpos_comment != -1):
+				mssg = data.encode('utf-8')[limitpos_comment+13:]
+			log.error (mssg)
+			retcode = [500, sanitize_strings(mssg).replace(".", " ").capitalize(), 0,'']
+			
+		limitpos = data.encode('utf-8').find('<error code="100"')				
+		if(limitpos != -1):
+			mssg = 'Incorrect user credentials ' + self.queryURL
+			limitpos_comment = data.encode('utf-8').find('description="')
+			if(limitpos_comment != -1):
+				mssg = data.encode('utf-8')[limitpos_comment+13:]
+			log.error (mssg)	
+			retcode = [100, sanitize_strings(mssg).replace(".", " ").capitalize(),0,'']			
+		return	retcode
+

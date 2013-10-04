@@ -35,9 +35,94 @@ import json
 from operator import itemgetter
 import hashlib
 
+#~ max visualized
+LOG_MAXLINES = 500
+	
 log = logging.getLogger(__name__)
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+def logviewer(logsdir):
+	filename=logsdir+'nzbmegasearch.log'
+
+
+	array1 = []
+	count = 0
+	for line in reversed(open(filename).readlines()):
+		if(count > LOG_MAXLINES):
+			break
+		array1.append(line.decode('utf-8').rstrip())
+		count = count + 1
+    
+    
+	return(render_template('loginfo.html', loginfo =array1 ))
+
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+def daemonize(logsdir):
+	#~ full credits to SICKBEARD
+	
+	# Make a non-session-leader child process
+	try:
+		pid = os.fork()  # @UndefinedVariable - only available in UNIX
+		if pid != 0:
+			sys.exit(0)
+	except OSError, e:
+		raise RuntimeError("1st fork failed: %s [%d]" % (e.strerror, e.errno))
+
+	os.setsid()  # @UndefinedVariable - only available in UNIX
+
+	# Make sure I can read my own files and shut out others
+	prev = os.umask(0)
+	os.umask(prev and int('077', 8))
+
+	# Make the child a session-leader by detaching from the terminal
+	try:
+		pid = os.fork()  # @UndefinedVariable - only available in UNIX
+		if pid != 0:
+			sys.exit(0)
+	except OSError, e:
+		raise RuntimeError("2nd fork failed: %s [%d]" % (e.strerror, e.errno))
+
+	dev_null = file('/dev/null', 'r')
+	os.dup2(dev_null.fileno(), sys.stdin.fileno())
+	log.info("Daemonized using PID " + str(pid))
+
+	#~ silences console output
+	#~ sys.stdout = open('tmpdl', 'wt')
+	logging.basicConfig(
+	level=logging.DEBUG,
+	format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+	filename=logsdir+'nzbmegasearch_daemon.log',
+	filemode='a')
+ 
+	stdout_logger = logging.getLogger('STDOUT')
+	sl = StreamToLogger(stdout_logger, logging.INFO)
+	sys.stdout = sl
+	 
+	stderr_logger = logging.getLogger('STDERR')
+	sl = StreamToLogger(stderr_logger, logging.ERROR)
+	sys.stderr = sl
+
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
+
+class StreamToLogger(object):
+   """
+   Fake file-like stream object that redirects writes to a logger instance.
+   """
+   def __init__(self, logger, log_level=logging.INFO):
+      self.logger = logger
+      self.log_level = log_level
+      self.linebuf = ''
+ 
+   def write(self, buf):
+      for line in buf.rstrip().splitlines():
+         self.logger.log(self.log_level, line.rstrip())
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
+ 
 def connectinfo():
 	return render_template('connectinfo.html')
 	
