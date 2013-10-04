@@ -158,9 +158,14 @@ div#container
 	font: 1.2em/1.5em Courier, monospace;
 	font-weight: bold;
 }
-#suggestions div {
+#suggestions.has-3-col div {
 	float: left;
 	width: 300px;
+	text-align: right;
+}
+#suggestions.has-2-col div {
+	float: left;
+	width: 450px;
 	text-align: right;
 }
 #suggestions ul {
@@ -210,12 +215,12 @@ div#container
 
 /* Main Search Area */
 #search-terms {
-	background: #378b96 none;
+	/*background: #378b96 none;
 	border: 5px solid #333;
-	color: #fff;
+	color: #fff;*/
 	font: 1.5em/1em Courier, monospace;
 	font-weight: bold;
-	padding: 15px 5px;
+	/*padding: 15px 5px;*/
 }
 
 #search-terms input {
@@ -641,7 +646,6 @@ border-left: 2px solid #6678b1;
 	margin: 0px 0px 0px 0px;
 	padding: 10px;
 }
-
 .configsave
 {
 	font-family: Helvetica, Arial, Sans-Serif;
@@ -652,8 +656,6 @@ border-left: 2px solid #6678b1;
 	border-collapse: collapse;
 	text-align: left;
 }
-
-
 .config_table_opts
 {
 	font-family: Helvetica, Arial, Sans-Serif;

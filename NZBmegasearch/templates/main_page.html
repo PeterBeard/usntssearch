@@ -87,7 +87,17 @@
 				</fieldset>
 			</form>
 			{% if trend_movie or trend_show or sugg -%}
-			<div id="suggestions">
+			{% set ntrends = 0 %}
+			{% if trend_movie %}
+			{% set ntrends = ntrends + 1 %}
+			{% endif %}
+			{% if trend_show %}
+			{% set ntrends = ntrends + 1 %}
+			{% endif %}
+			{% if sugg %}
+			{% set ntrends = ntrends + 1 %}
+			{% endif %}
+			<div id="suggestions" class="has-{{ ntrends }}-col">
 				{%if trend_movie -%}
 				<div>
 					<h1>Movies Trending</h1>
